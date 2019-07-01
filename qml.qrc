@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>theme/theme.js</file>
+        <file>Commands.qml</file>
+        <file>PlotChart.qml</file>
+        <file>SensorsListView.qml</file>
+    </qresource>
+</RCC>
