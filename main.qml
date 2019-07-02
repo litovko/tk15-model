@@ -10,6 +10,7 @@ Window {
     height: 700
     title: qsTr("TK-15 ТРЕНАЖЕР")
     color: THEME.window_background_color
+
     TK15{
         id: tk15
         chart: plot.plot
@@ -33,6 +34,8 @@ Window {
         anchors.bottom: parent.bottom
         width:  parent.width-100
         height: 600
+
+
     }
     SensorsListView {
         id: listView
@@ -40,6 +43,42 @@ Window {
             tk15.toggle(name,chk)
             print (name+" status: "+chk)
         }
+    }
+    ProgressBar {
+        id: progressBar
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.margins: 10
+        from: 0
+        to: 100
+        value: tk15.progress
+        visible: value>0
+//        indeterminate: true
+        background: Rectangle {
+                 implicitWidth: parent.width
+                 implicitHeight: 14
+                 color: "#e6e6e6"
+                 radius: 3
+                 Text {
+                     anchors.centerIn: parent
+                     id: name
+                     z: 1
+                     color: "blue"
+                     text: progressBar.value
+                 }
+             }
+        contentItem: Item {
+                  implicitWidth: 200
+                  implicitHeight: parent.height
+                  z:-1
+                  Rectangle {
+                      width: progressBar.visualPosition * parent.width
+                      height: parent.height
+                      radius: 2
+                      z: 0
+                      color: "#17a81a"
+                  }
+              }
     }
 
 }

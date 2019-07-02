@@ -11,7 +11,7 @@ Model::Model(QObject *parent) : QObject(parent)
     connect(m_tcp_server, SIGNAL(newConnection()), this, SLOT(serverConnection()));
     connect(&m_play_timer, SIGNAL(timeout()), this, SLOT(update()));
     connect(this, SIGNAL(filenameChanged()), this, SLOT(readfile()));
-
+    //connect(this, SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     //создаем массив переменных
     values["type"] = {"Тип аппарата", 0};
     values["toil"] = {"Температура масла 1", 0};
@@ -143,8 +143,8 @@ void Model::update()
 void Model::readfile()
 {
     if(m_dataset_ptr) delete m_dataset_ptr;
-    m_dataset_ptr = new Dataset();
-
+    m_dataset_ptr = new Dataset(this);
+    connect(m_dataset_ptr, SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     m_dataset_ptr->setSource(m_filename);
     int res = m_dataset_ptr->getData();
     qDebug()<<"res:"<<res;
@@ -312,6 +312,19 @@ void Model::fill_out(const QString str)
     if (el.value()["_dat"]==2) {
         qDebug()<<el.key()<<"|"<<el.value();
     }
+}
+
+quint16 Model::progress() const
+{
+    return m_progress;
+}
+
+void Model::setProgress(const quint16 &progress)
+{
+    m_progress = progress;
+    qDebug()<<"pr:"<<progress;
+    emit progressChanged();
+
 }
 
 QStringList Model::data_sensors() const

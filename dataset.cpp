@@ -2,8 +2,13 @@
 #include <QFile>
 #include <QtDebug>
 #include <QTime>
+#include <QCoreApplication>
+//Dataset::Dataset()
+//{
 
-Dataset::Dataset()
+//}
+
+Dataset::Dataset(QObject *parent)
 {
 
 }
@@ -29,13 +34,15 @@ int Dataset::getData()
     auto size=file.size();
     while (!file.atEnd()) {
         QString str=file.readLine();
+
         process(str);
-        m_progress=(100*file.pos())/size;
+        setProgress(100*file.pos()/size);
     }
     m_data_control.removeAt(0);
     m_data_sensors.removeAt(0);
     qDebug()<<"["<<m_data_control<<"]";
     qDebug()<<"["<<m_data_sensors<<"]";
+    qDebug()<<"=========="<<m_progress;
     return m_data.size();
 }
 
@@ -92,6 +99,15 @@ int Dataset::decode(const QString &mode)
     if (mode=="grup4") return 4;
     if (mode=="grup5") return 5;
     return 0;
+}
+
+void Dataset::setProgress(const quint16 &progress)
+{
+    if( m_progress==progress) return;
+    m_progress = progress;
+    emit progressChanged(m_progress);
+    qDebug()<<"progress:"<<m_progress;
+    QCoreApplication::processEvents();
 }
 
 QStringList Dataset::getData_sensors() const

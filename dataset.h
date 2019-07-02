@@ -3,10 +3,11 @@
 #include "QString"
 #include <QVariant>
 
-class Dataset
+class Dataset : public QObject
 {
+    Q_OBJECT
 public:
-    Dataset();
+    explicit Dataset(QObject *parent = nullptr);
     QString source() const;
     void setSource(const QString &source);
     int getData();
@@ -17,6 +18,10 @@ public:
     QStringList getData_control() const;
 
     QStringList getData_sensors() const;
+
+    void setProgress(const quint16 &progress);
+signals:
+    void progressChanged(quint16 newValue);
 
 private:
     QString m_source="";

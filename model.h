@@ -14,6 +14,7 @@ class Model : public QObject
     Q_PROPERTY(QString address READ address WRITE setAddress NOTIFY addressChanged)
     Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged())
+    Q_PROPERTY(quint16 progress READ progress NOTIFY progressChanged())
     Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
     Q_PROPERTY(CustomPlotItem *chart READ chart WRITE setChart NOTIFY chartChanged)
     Q_PROPERTY(QStringList data_control READ data_control NOTIFY data_controlChanged)
@@ -41,6 +42,9 @@ public:
 
     QStringList data_sensors() const;
 
+    quint16 progress() const;
+
+
 signals:
     void addressChanged();
     void portChanged();
@@ -49,8 +53,11 @@ signals:
     void chartChanged();
     void data_controlChanged();
     void data_sensorsChanged();
+    void progressChanged();
+
 
 public slots:
+    void setProgress(const quint16 &progress);
     void serverConnection();
     void clientDisconnected();
     void readSlot(); //read data from socket
@@ -86,10 +93,13 @@ private:
     QTime m_current_time;
     QString m_current_key;
 
+    quint16 m_progress=0;
+
     //===
     CustomPlotItem *m_chart=nullptr;
     QStringList m_data_control;
     QStringList m_data_sensors;
+
 };
 
 #endif // MODEL_H

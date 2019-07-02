@@ -15,7 +15,7 @@ Item {
             case "OPEN":
                 fileDialog.visible=true;
             break
-            case "PRING":
+            case "PRINT":
                 tk15.printdata()
             break;
         default:
