@@ -18,6 +18,10 @@ Item {
             case "PRINT":
                 tk15.printdata()
             break;
+            case "SWITCH":
+                rect.visible=!rect.visible
+            break;
+
         default:
             print("default")
         }
@@ -30,6 +34,7 @@ Item {
            if (event.key === Qt.Key_F5) execute("PLAY")
            if (event.key === Qt.Key_F3) execute("LISTEN")
            if (event.key === Qt.Key_F6) execute("PRINT")
+           if (event.key === Qt.Key_F7) execute("SWITCH")
        }
 
 

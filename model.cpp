@@ -11,6 +11,7 @@ Model::Model(QObject *parent) : QObject(parent)
     connect(m_tcp_server, SIGNAL(newConnection()), this, SLOT(serverConnection()));
     connect(&m_play_timer, SIGNAL(timeout()), this, SLOT(update()));
     connect(this, SIGNAL(filenameChanged()), this, SLOT(readfile()));
+    //connect(this, SIGNAL(dataLoaded()), this, SLOT(plotdata()));
     //connect(this, SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     //создаем массив переменных
     values["type"] = {"Тип аппарата", 0};
@@ -69,6 +70,15 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["vchs"] = {"#DE517C", 1};
     listen();
 
+}
+
+Model::~Model()
+{
+    qDebug()<<"model destructor";
+    if (m_dataset_ptr) m_dataset_ptr->abort();
+    m_thread.terminate();\
+    m_thread.wait();
+    if (m_dataset_ptr) delete m_dataset_ptr;
 }
 
 QString Model::address() const
@@ -143,13 +153,24 @@ void Model::update()
 void Model::readfile()
 {
     if(m_dataset_ptr) delete m_dataset_ptr;
+    m_data_control.clear();
+    m_data_sensors.clear();
+    emit data_controlChanged();
+    emit data_sensorsChanged();
+    qDebug()<<"THREAD:"<<QThread::currentThreadId();
     m_dataset_ptr = new Dataset(this);
-    connect(m_dataset_ptr, SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     m_dataset_ptr->setSource(m_filename);
-    int res = m_dataset_ptr->getData();
-    qDebug()<<"res:"<<res;
-    //qDebug()<<m_dataset_ptr->m_data.end().key();
+    m_dataset_ptr->moveToThread(&m_thread);
+    connect(&m_thread,      SIGNAL(started()),  m_dataset_ptr, SLOT(getData()));
+    connect(m_dataset_ptr,  SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
+    connect(m_dataset_ptr,  SIGNAL(finished()), this, SLOT(finishFileLoading()));
+    m_thread.start();
+}
 
+void Model::finishFileLoading()
+{
+    m_thread.quit();
+    setProgress(0);
     m_data_control=m_dataset_ptr->getData_control();
     m_data_sensors=m_dataset_ptr->getData_sensors();
     plotdata();
@@ -319,12 +340,13 @@ quint16 Model::progress() const
     return m_progress;
 }
 
+
+
 void Model::setProgress(const quint16 &progress)
 {
     m_progress = progress;
     qDebug()<<"pr:"<<progress;
     emit progressChanged();
-
 }
 
 QStringList Model::data_sensors() const

@@ -3,6 +3,7 @@
 #include <QtDebug>
 #include <QTime>
 #include <QCoreApplication>
+#include <QThread>
 //Dataset::Dataset()
 //{
 
@@ -26,24 +27,28 @@ void Dataset::setSource(const QString &source)
     qDebug()<<"filename:"<<m_source;
 }
 
-int Dataset::getData()
+void Dataset::getData()
 {
+    qDebug()<<"data THREAD:"<<QThread::currentThreadId();
     QFile file(m_source);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return 0;
+        return ;
     auto size=file.size();
     while (!file.atEnd()) {
+        if (_abort) {
+            qDebug()<<"data loading aborted";
+            return;
+        }
         QString str=file.readLine();
-
         process(str);
-        setProgress(100*file.pos()/size);
+        setProgress(100.0*file.pos()/size);
     }
     m_data_control.removeAt(0);
     m_data_sensors.removeAt(0);
     qDebug()<<"["<<m_data_control<<"]";
     qDebug()<<"["<<m_data_sensors<<"]";
     qDebug()<<"=========="<<m_progress;
-    return m_data.size();
+    emit finished();
 }
 
 void Dataset::process(QString &str)
@@ -107,7 +112,12 @@ void Dataset::setProgress(const quint16 &progress)
     m_progress = progress;
     emit progressChanged(m_progress);
     qDebug()<<"progress:"<<m_progress;
-    QCoreApplication::processEvents();
+    //QCoreApplication::processEvents();
+}
+
+void Dataset::abort()
+{
+    _abort = true;
 }
 
 QStringList Dataset::getData_sensors() const

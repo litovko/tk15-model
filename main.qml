@@ -44,6 +44,16 @@ Window {
             print (name+" status: "+chk)
         }
     }
+    Rectangle {
+        id: rect
+        width: 10
+        height: 10
+        anchors.right: parent.right
+        anchors.top: parent.top
+        color: "blue"
+
+    }
+
     ProgressBar {
         id: progressBar
         anchors.horizontalCenter: parent.horizontalCenter
@@ -59,13 +69,6 @@ Window {
                  implicitHeight: 14
                  color: "#e6e6e6"
                  radius: 3
-                 Text {
-                     anchors.centerIn: parent
-                     id: name
-                     z: 1
-                     color: "blue"
-                     text: progressBar.value
-                 }
              }
         contentItem: Item {
                   implicitWidth: 200
@@ -75,10 +78,18 @@ Window {
                       width: progressBar.visualPosition * parent.width
                       height: parent.height
                       radius: 2
-                      z: 0
                       color: "#17a81a"
+
                   }
+
               }
+        Text {
+            anchors.centerIn: parent
+            height: parent.height
+            id: proctext
+            color: "blue"
+            text: progressBar.value
+        }
     }
 
 }

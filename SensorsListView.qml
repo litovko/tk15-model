@@ -46,7 +46,7 @@ ListView {
                     x: cb.leftPadding
                     y: parent.height / 2 - height / 2
                     radius: 3
-                    border.color: cb.down ? Qt.red : THEME.window_text_color
+                    border.color: cb.down ? "red": THEME.window_text_color
                     color: THEME.window_background_color
                     Rectangle {
                         width: 14

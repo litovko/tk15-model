@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTimer>
 #include <QTime>
+#include <QThread>
 #include "dataset.h"
 #include "third/qmlplot.h"
 
@@ -22,6 +23,7 @@ class Model : public QObject
 
 public:
     explicit Model(QObject *parent = nullptr);
+    ~Model();
 
     QString address() const;
     void setAddress(const QString &address);
@@ -45,6 +47,8 @@ public:
     quint16 progress() const;
 
 
+
+
 signals:
     void addressChanged();
     void portChanged();
@@ -54,6 +58,7 @@ signals:
     void data_controlChanged();
     void data_sensorsChanged();
     void progressChanged();
+    void dataLoaded();
 
 
 public slots:
@@ -63,6 +68,8 @@ public slots:
     void readSlot(); //read data from socket
     void update();
     void readfile();
+    void plotdata();
+    void finishFileLoading();
     Q_INVOKABLE void play();
     Q_INVOKABLE void listen();
     Q_INVOKABLE void stop_listen();
@@ -74,7 +81,6 @@ private:
     void sendData();
     void process();
 
-    void plotdata();
     void fill_out(const QString str);
 
     QString m_address="localhost";
@@ -83,12 +89,16 @@ private:
     QTcpServer* m_tcp_server=nullptr;
     QTcpSocket* m_client_connection = nullptr;
     bool m_connected = false;
+
     QMap < QString, QPair<QString, quint16> > values;
     QMap < QString, QString>  inputs;
     QMap < QString, QPair<QString, qint32> > outputs;
     QMap < QString, QPair<QString, double>> graph_params;
     QString m_filename="";
     Dataset* m_dataset_ptr = nullptr;
+
+    QThread m_thread;
+
     QTimer m_play_timer;
     QTime m_current_time;
     QString m_current_key;
