@@ -5,5 +5,6 @@
         <file>Commands.qml</file>
         <file>PlotChart.qml</file>
         <file>SensorsListView.qml</file>
+        <file>Plotarea.qml</file>
     </qresource>
 </RCC>

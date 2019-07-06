@@ -2,94 +2,60 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import "theme/theme.js" as THEME
 import HYCO 1.0
-import QtQuick.Controls 2.3
 
 Window {
+    id: mainwindow
     visible: true
     width: 700
     height: 700
     title: qsTr("TK-15 ТРЕНАЖЕР")
     color: THEME.window_background_color
 
-    TK15{
+    TK15 {
         id: tk15
-        chart: plot.plot
-
+        chart: plotarea.plot
     }
-    Commands{
+    Commands {
         id: cmd
-
     }
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         id: f
         text: qsTr(tk15.filename)
-        color:THEME.window_text_color
+        color: THEME.window_text_color
         height: THEME.window_text_size
     }
-    PlotChart {
-        id: plot
-        anchors.left: listView.right
+    Plotarea {
+        id: plotarea
+        visible: !tk15.onload
+        anchors {
+                    left: listView_s.right
+                    right: listView_c.left
+                    bottom: parent.bottom
+                    top: parent.top
+                    margins: 50
+        }
+    }
+
+    SensorsListView {
+        id: listView_s
+        anchors.left: parent.left
         anchors.bottom: parent.bottom
-        width:  parent.width-100
-        height: 600
-
-
+        model: tk15.data_sensors
+        onDelegatChanged: {
+            tk15.toggle(name, chk)
+            print(name + " status: " + chk)
+        }
     }
     SensorsListView {
-        id: listView
+        id: listView_c
+        anchors.right:  parent.right
+        anchors.bottom: parent.bottom
+        model: tk15.data_control
         onDelegatChanged: {
-            tk15.toggle(name,chk)
-            print (name+" status: "+chk)
+            tk15.toggle(name, chk)
+            print(name + " status: " + chk)
         }
     }
-    Rectangle {
-        id: rect
-        width: 10
-        height: 10
-        anchors.right: parent.right
-        anchors.top: parent.top
-        color: "blue"
-
-    }
-
-    ProgressBar {
-        id: progressBar
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.margins: 10
-        from: 0
-        to: 100
-        value: tk15.progress
-        visible: value>0
-//        indeterminate: true
-        background: Rectangle {
-                 implicitWidth: parent.width
-                 implicitHeight: 14
-                 color: "#e6e6e6"
-                 radius: 3
-             }
-        contentItem: Item {
-                  implicitWidth: 200
-                  implicitHeight: parent.height
-                  z:-1
-                  Rectangle {
-                      width: progressBar.visualPosition * parent.width
-                      height: parent.height
-                      radius: 2
-                      color: "#17a81a"
-
-                  }
-
-              }
-        Text {
-            anchors.centerIn: parent
-            height: parent.height
-            id: proctext
-            color: "blue"
-            text: progressBar.value
-        }
-    }
-
 }

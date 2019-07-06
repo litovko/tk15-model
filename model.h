@@ -15,6 +15,7 @@ class Model : public QObject
     Q_PROPERTY(QString address READ address WRITE setAddress NOTIFY addressChanged)
     Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged())
+    Q_PROPERTY(bool onload READ onload NOTIFY onloadChanged())
     Q_PROPERTY(quint16 progress READ progress NOTIFY progressChanged())
     Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
     Q_PROPERTY(CustomPlotItem *chart READ chart WRITE setChart NOTIFY chartChanged)
@@ -49,6 +50,9 @@ public:
 
 
 
+    bool onload() const;
+    void setOnload(bool onload);
+
 signals:
     void addressChanged();
     void portChanged();
@@ -59,6 +63,7 @@ signals:
     void data_sensorsChanged();
     void progressChanged();
     void dataLoaded();
+    void onloadChanged();
 
 
 public slots:
@@ -76,6 +81,7 @@ public slots:
     Q_INVOKABLE void printdata();
     Q_INVOKABLE void toggle(QString tag, bool state);
     Q_INVOKABLE QString color(QString tag);
+    Q_INVOKABLE void stop_readfile();
 
 private:
     void sendData();
@@ -89,11 +95,12 @@ private:
     QTcpServer* m_tcp_server=nullptr;
     QTcpSocket* m_client_connection = nullptr;
     bool m_connected = false;
+    bool m_onload = false;
 
     QMap < QString, QPair<QString, quint16> > values;
     QMap < QString, QString>  inputs;
     QMap < QString, QPair<QString, qint32> > outputs;
-    QMap < QString, QPair<QString, double>> graph_params;
+    QMap < QString, QPair<QString, double>> graph_params; //цвет и коэффициент графика
     QString m_filename="";
     Dataset* m_dataset_ptr = nullptr;
 

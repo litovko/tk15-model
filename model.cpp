@@ -64,12 +64,19 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["altm"] = {"#FF50FF", 1};
     graph_params["dc1v"] = {"#FF50FF", 1};
     graph_params["dc2v"] = {"#FF50FF", 1};
-    graph_params["spxy"] = {"#FF80FF", 0};
-    graph_params["tang"] = {"#FF90FF", 1};
-    graph_params["kren"] = {"#FF007F", 1};
-    graph_params["vchs"] = {"#DE517C", 1};
+    graph_params["spxy"] = {"#FF80FF", 1};
+    graph_params["sp_X"] = {"#008000", 1};
+    graph_params["sp_Y"] = {"#0080B0", 1};
+    graph_params["tang"] = {"#FF90FF", 10};
+    graph_params["kren"] = {"#FF007F", 10};
+    graph_params["vchs"] = {"#DE517C", 10};
+    graph_params["ana1"] = {"#5D5D00", 1};
+    graph_params["ana2"] = {"#5D5D08", 1};
+    graph_params["ana3"] = {"#5D5D10", 1};
+    graph_params["dig1"] = {"#5D5D1D", 1};
+    graph_params["svet"] = {"#5D5D1D", 1};
+    //"ana1", "ana2", "ana3", "gmod", "time", "svet", "dig1"
     listen();
-
 }
 
 Model::~Model()
@@ -158,12 +165,13 @@ void Model::readfile()
     emit data_controlChanged();
     emit data_sensorsChanged();
     qDebug()<<"THREAD:"<<QThread::currentThreadId();
-    m_dataset_ptr = new Dataset(this);
+    m_dataset_ptr = new Dataset();
     m_dataset_ptr->setSource(m_filename);
     m_dataset_ptr->moveToThread(&m_thread);
     connect(&m_thread,      SIGNAL(started()),  m_dataset_ptr, SLOT(getData()));
     connect(m_dataset_ptr,  SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     connect(m_dataset_ptr,  SIGNAL(finished()), this, SLOT(finishFileLoading()));
+    setOnload(true);
     m_thread.start();
 }
 
@@ -173,6 +181,7 @@ void Model::finishFileLoading()
     setProgress(0);
     m_data_control=m_dataset_ptr->getData_control();
     m_data_sensors=m_dataset_ptr->getData_sensors();
+    setOnload(false);
     plotdata();
     emit data_controlChanged();
     emit data_sensorsChanged();
@@ -275,6 +284,12 @@ QString Model::color(QString tag)
     return graph_params[tag].first;
 }
 
+void Model::stop_readfile()
+{
+    if(!m_dataset_ptr) return;
+    m_dataset_ptr->abort();
+}
+
 
 
 void Model::plotdata()
@@ -285,14 +300,17 @@ void Model::plotdata()
     for(auto sens: m_data_sensors) {
         m_chart->CustomPlot()->addGraph()->setName(sens);
     }
+    for(auto sens: m_data_control) {
+        m_chart->CustomPlot()->addGraph()->setName(sens);
+    }
     m_data_sensors.removeAt(m_data_sensors.indexOf("time"));
-    qDebug()<<m_chart->name();
+    qDebug()<<"count:"<<m_chart->CustomPlot()->graphCount();
 
     int x;
     auto xmin = INT_MAX, xmax = INT_MIN;
     auto ymin = INT_MAX, ymax = INT_MIN;
     for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных
-        if (el.second["_dat"] != 2) continue;
+        //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
         auto findname = [this](QString theName)->int {
             return m_chart->index_by_name(theName);
@@ -311,6 +329,7 @@ void Model::plotdata()
         for (int i=0; i<m_chart->CustomPlot()->graphCount(); ++i)
         {
             auto s=m_chart->CustomPlot()->graph(i)->name();
+            //qDebug()<<"set color to :"<<s;
             m_chart->CustomPlot()->graph(i)->setPen( QPen( graph_params[s].first ) );
             m_chart->CustomPlot()->graph(i)->setVisible(false);
         }
@@ -335,6 +354,17 @@ void Model::fill_out(const QString str)
     }
 }
 
+bool Model::onload() const
+{
+    return m_onload;
+}
+
+void Model::setOnload(bool onload)
+{
+    m_onload = onload;
+    emit onloadChanged();
+}
+
 quint16 Model::progress() const
 {
     return m_progress;
@@ -345,7 +375,7 @@ quint16 Model::progress() const
 void Model::setProgress(const quint16 &progress)
 {
     m_progress = progress;
-    qDebug()<<"pr:"<<progress;
+    //qDebug()<<"pr:"<<progress;
     emit progressChanged();
 }
 

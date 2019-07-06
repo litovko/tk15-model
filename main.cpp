@@ -42,7 +42,6 @@ extern void toggle_log(bool recordlog) {
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     QByteArray localMsg = msg.toLocal8Bit();
-    //QByteArray lMsg=codec->convertToUnicode(msg);
     switch (type) {
     case QtDebugMsg:
         fprintf(stderr, "D:%s %s (%s:%u, %s)\n",QTime::currentTime().toString("hh:mm:ss:zzz ").toLocal8Bit().data(), localMsg.constData(), context.file, context.line, context.function);

@@ -9,7 +9,6 @@ Item {
 
         Component.onCompleted:  {
             initCustomPlot()
-            //tk15.chart = customPlot
         }
 
 

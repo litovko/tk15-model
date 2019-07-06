@@ -6,11 +6,10 @@ import QtQuick.Controls 2.3
 
 ListView {
     id: listView
-    anchors.left: parent.left
-    anchors.bottom: parent.bottom
+
     width: 100
     height: parent.height
-    model: tk15.data_sensors
+
     signal delegatChanged(string name, bool chk)
     delegate: Item {
         x: 5

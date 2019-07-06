@@ -8,6 +8,7 @@ class Dataset : public QObject
     Q_OBJECT
 public slots:
     void getData();
+    void finish();
 
 public:
     explicit Dataset(QObject *parent = nullptr);
@@ -32,6 +33,8 @@ signals:
 private:
     QString m_source="";
     int decode(const QString &mode);
+    int spxy_to_X(const quint16 spxy, qint16 def);
+    int spxy_to_Y(const quint16 spxy, qint16 def);
     quint16 m_progress=0;
     QStringList m_data_control;
     QStringList m_data_sensors;

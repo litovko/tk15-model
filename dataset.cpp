@@ -9,9 +9,9 @@
 
 //}
 
-Dataset::Dataset(QObject *parent)
+Dataset::Dataset(QObject *parent): QObject(parent)
 {
-
+    connect(this, SIGNAL(finished()),this,SLOT(finish()));
 }
 
 QString Dataset::source() const
@@ -37,28 +37,29 @@ void Dataset::getData()
     while (!file.atEnd()) {
         if (_abort) {
             qDebug()<<"data loading aborted";
+            emit finished();
             return;
         }
         QString str=file.readLine();
         process(str);
         setProgress(100.0*file.pos()/size);
     }
+    emit finished();
+}
+
+void Dataset::finish()
+{
     m_data_control.removeAt(0);
     m_data_sensors.removeAt(0);
+    m_data_sensors.removeAt(m_data_sensors.indexOf("type"));
     qDebug()<<"["<<m_data_control<<"]";
     qDebug()<<"["<<m_data_sensors<<"]";
-    qDebug()<<"=========="<<m_progress;
-    emit finished();
 }
 
 void Dataset::process(QString &str)
 {
-    /*
-      Debug:13:47:49:972  Rig read : "{type:mgbu_;dc1v:227;dc2v:0;toil:18;toi2:0;poil:1;poi2:0;pwrv:236;pwv2:231;pwv3:235;vchs:43;pwra:1;pwa2:1;pwa3:0;leak:0;tang:4;kren:-3;spxy:64;drpm:0;altm:1}DEADBEEF"(:0, )
-      Debug:13:48:12:757  Options with recording Cam1:  :clock-jitter=10000,:clock-synchro=0,:ods,:spu,:high-priority,:network-caching=300,:sout=#duplicate{dst=display,dst=std{access=file,mux=mp4,dst=D:/video/hyco-cam1-below-07-06-2019_13-48-12.mpg}}(qrc:/main.qml:153, getrecordoption)
-     */
-//    if (str.indexOf("Rig read")>0)
-//        qDebug()<<str;
+    static auto _posx=0;
+    static auto _posy=0;
     auto n = str.indexOf("\"{", 10);
     if (n <= 0) return;
     auto t =str.indexOf(":")+1;
@@ -76,9 +77,21 @@ void Dataset::process(QString &str)
             m_data[stime][pair[0]] = decode(pair[1]);
 
         } else {
-            m_data[stime][pair[0]] = pair[1].toInt();
+            if(pair[0]=="spxy"){
+
+                _posx=spxy_to_X(pair[1].toInt(), _posx);
+                m_data[stime]["sp_X"] = 10*_posx;
+                _posy=spxy_to_Y(pair[1].toInt(), _posy);
+                //qDebug()<<"_posy:"<<_posy;
+                m_data[stime]["sp_Y"] = _posy/2;
+                //qDebug()<<_posx<<"spxy:"<<pair[1];
+
+            }
+            else
+                m_data[stime][pair[0]] = pair[1].toInt();
 
         }
+        //добавляем тэг типа данных
         if( m_data[stime].contains("gmod") ) {
             m_data[stime]["_dat"] = 1;
             m_data_control.append(m_data[stime].keys());
@@ -106,12 +119,43 @@ int Dataset::decode(const QString &mode)
     return 0;
 }
 
+int Dataset::spxy_to_X(const quint16 spxy, qint16 def)
+{
+    switch (spxy&255) {
+        case 1: return -1;
+        case 2: return -2;
+        case 4: return -3;
+        case 8: return 1;
+        case 16: return 2;
+        case 32: return 3;
+        case 128: return 0;
+    }
+    return def;
+}
+
+
+int Dataset::spxy_to_Y(const quint16 spxy, qint16 def)
+{
+    //qDebug()<<">"<<(spxy>>8);
+    switch (spxy>>8) {
+        case 1: return -50;
+        case 2: return 50;
+        case 4: return 100;
+        case 8: return 200;
+        case 16: return 400;
+        case 32: return 600;
+        case 64: return 1000;
+        case 128: return 0;
+    }
+    return def;
+}
+
 void Dataset::setProgress(const quint16 &progress)
 {
     if( m_progress==progress) return;
     m_progress = progress;
     emit progressChanged(m_progress);
-    qDebug()<<"progress:"<<m_progress;
+    //qDebug()<<"progress:"<<m_progress;
     //QCoreApplication::processEvents();
 }
 
