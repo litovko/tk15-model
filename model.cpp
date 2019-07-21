@@ -62,19 +62,24 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["pwa3"] = {"#FF10FF", 0.1};
     graph_params["leak"] = {"#0050FF", 1};
     graph_params["altm"] = {"#FF50FF", 1};
-    graph_params["dc1v"] = {"#FF50FF", 1};
-    graph_params["dc2v"] = {"#FF50FF", 1};
+    graph_params["dc1v"] = {"#FF50FF", 0.1};
+    graph_params["dc2v"] = {"#FF50FF", 0.1};
     graph_params["spxy"] = {"#FF80FF", 1};
     graph_params["sp_X"] = {"#008000", 1};
     graph_params["sp_Y"] = {"#0080B0", 1};
-    graph_params["tang"] = {"#FF90FF", 10};
-    graph_params["kren"] = {"#FF007F", 10};
-    graph_params["vchs"] = {"#DE517C", 10};
+    graph_params["tang"] = {"#FF90FF", 1.0};
+    graph_params["kren"] = {"#FF007F", 1.0};
+    graph_params["vchs"] = {"#DE517C", 1.0};
     graph_params["ana1"] = {"#5D5D00", 1};
     graph_params["ana2"] = {"#5D5D08", 1};
     graph_params["ana3"] = {"#5D5D10", 1};
     graph_params["dig1"] = {"#5D5D1D", 1};
     graph_params["svet"] = {"#5D5D1D", 1};
+    graph_params["svet1"] = {"#5D5D1D", 1};
+    graph_params["svet2"] = {"#5D5D1D", 1};
+    graph_params["svet3"] = {"#5D5D1D", 1};
+    graph_params["svet4"] = {"#5D5D1D", 1};
+    graph_params["gmod"] = {"#ADADAD", 10};
     //"ana1", "ana2", "ana3", "gmod", "time", "svet", "dig1"
     listen();
 }
@@ -284,6 +289,13 @@ QString Model::color(QString tag)
     return graph_params[tag].first;
 }
 
+void Model::tagcolor(QString tag, QString color)
+{
+    graph_params[tag].first=color;
+    m_chart->CustomPlot()->graph(m_chart->index_by_name(tag))->setPen( QPen( graph_params[tag].first ) );
+    m_chart->CustomPlot()->replot();
+}
+
 void Model::stop_readfile()
 {
     if(!m_dataset_ptr) return;
@@ -297,9 +309,11 @@ void Model::plotdata()
     //yAxis->setTickLabelType(QCPAxis::ltDateTime);
     //yAxis->setDateTimeFormat("hh:mm:ss");
     m_chart->CustomPlot()->clearGraphs();
+    //добавляем графики сенсоров
     for(auto sens: m_data_sensors) {
         m_chart->CustomPlot()->addGraph()->setName(sens);
     }
+    //добавляем графики управляющих сигналов
     for(auto sens: m_data_control) {
         m_chart->CustomPlot()->addGraph()->setName(sens);
     }
@@ -307,20 +321,29 @@ void Model::plotdata()
     qDebug()<<"count:"<<m_chart->CustomPlot()->graphCount();
 
     int x;
+    static auto _gmod=0;
     auto xmin = INT_MAX, xmax = INT_MIN;
     auto ymin = INT_MAX, ymax = INT_MIN;
-    for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных
+    for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временным отсчетам
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
-        auto findname = [this](QString theName)->int {
-            return m_chart->index_by_name(theName);
-        };
+        //auto ;
         //qDebug()<<"       t="<<el.first;
-        for (auto v: el.second.toStdMap() ) {
+        for (auto v: el.second.toStdMap() ) { //цикл по тегам в одном временном отсчете
             //qDebug()<<"tag="<< v.first<<" v="<<v.second;
-            int e=findname(v.first);
+            int e=[this](QString theName)->int {
+                return m_chart->index_by_name(theName);
+            }(v.first);
             if (e < 0) continue;
-            m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second);
+            if (v.first!="gmod")
+                m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second*graph_params[v.first].second);
+            else
+                if (_gmod==v.second)
+                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second*graph_params[v.first].second);
+                else {
+                    _gmod=v.second;
+                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, qQNaN());
+                }
             xmin = std::min(x,xmin);
             //ymin = std::min(y,ymin);
             xmax = std::max(x,xmax);
@@ -332,6 +355,8 @@ void Model::plotdata()
             //qDebug()<<"set color to :"<<s;
             m_chart->CustomPlot()->graph(i)->setPen( QPen( graph_params[s].first ) );
             m_chart->CustomPlot()->graph(i)->setVisible(false);
+            if (s=="gmod")
+                m_chart->CustomPlot()->graph(i)->setBrush(QBrush(QColor(255,0,0,20)));
         }
         //m_chart->CustomPlot()->graph(0)->setPen( QPen( Qt::red ) );
         //y = el.second["pwra"];

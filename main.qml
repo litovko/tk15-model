@@ -2,6 +2,8 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import "theme/theme.js" as THEME
 import HYCO 1.0
+import QtQuick.Controls 2.5
+
 
 Window {
     id: mainwindow
@@ -45,7 +47,11 @@ Window {
         model: tk15.data_sensors
         onDelegatChanged: {
             tk15.toggle(name, chk)
-            print(name + " status: " + chk)
+            //print(name + " status: " + chk)
+        }
+        onTagcolorChanged: {
+            print (name+"==="+col)
+            tk15.tagcolor(name, col)
         }
     }
     SensorsListView {
@@ -55,7 +61,11 @@ Window {
         model: tk15.data_control
         onDelegatChanged: {
             tk15.toggle(name, chk)
-            print(name + " status: " + chk)
+            //print(name + " status: " + chk)
+        }
+        onTagcolorChanged: {
+            print (name+"==="+col)
+            tk15.tagcolor(name, col)
         }
     }
 }

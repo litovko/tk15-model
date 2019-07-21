@@ -81,6 +81,7 @@ public slots:
     Q_INVOKABLE void printdata();
     Q_INVOKABLE void toggle(QString tag, bool state);
     Q_INVOKABLE QString color(QString tag);
+    Q_INVOKABLE void tagcolor(QString tag, QString color);
     Q_INVOKABLE void stop_readfile();
 
 private:

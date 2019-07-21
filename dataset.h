@@ -3,9 +3,44 @@
 #include "QString"
 #include <QVariant>
 
+
+enum TagsValue {tag_ana1,
+                tag_ana2,
+                tag_ana3,
+                tag_gmod,
+                tag_time,
+                tag_svet,
+                tag_svet1,
+                tag_svet2,
+                tag_svet3,
+                tag_svet4,
+                tag_dig1,
+                tag_dc1v,
+                tag_dc2v,
+                tag_toil,
+                tag_toi2,
+                tag_poil,
+                tag_poi2,
+                tag_pwrv,
+                tag_pwv2,
+                tag_pwv3,
+                tag_vchs,
+                tag_pwra,
+                tag_pwa2,
+                tag_pwa3,
+                tag_leak,
+                tag_tang,
+                tag_kren,
+                tag_spxy,
+                tag_sp_X,
+                tag_sp_Y,
+                tag_drpm,
+                tag_altm};
+
 class Dataset : public QObject
 {
     Q_OBJECT
+
 public slots:
     void getData();
     void finish();
@@ -17,6 +52,7 @@ public:
 
     void process(QString &str);
 
+    QMap <QString, TagsValue> m_tags;
     QMap < QString, QMap<QString, qint32> > m_data;
 
     QStringList getData_control() const;

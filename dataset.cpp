@@ -11,6 +11,39 @@
 
 Dataset::Dataset(QObject *parent): QObject(parent)
 {
+    //initialize tags map
+    m_tags={
+        {"ana1",tag_ana1},
+        {"ana2",tag_ana2},
+        {"ana3",tag_ana3},
+        {"gmod",tag_gmod},
+        {"time",tag_time},
+        {"svet",tag_svet},
+        {"dig1",tag_dig1},
+        {"dc1v",tag_dc1v},
+        {"dc2v",tag_dc2v},
+        {"toil",tag_toil},
+        {"toi2",tag_toi2},
+        {"poil",tag_poil},
+        {"poi2",tag_poi2},
+        {"pwrv",tag_pwrv},
+        {"pwv2",tag_pwv2},
+        {"pwv3",tag_pwv3},
+        {"vchs",tag_vchs},
+        {"pwra",tag_pwra},
+        {"pwa2",tag_pwa2},
+        {"pwa3",tag_pwa3},
+        {"leak",tag_leak},
+        {"tang",tag_tang},
+        {"kren",tag_kren},
+        {"spxy",tag_spxy},
+        {"sp_X",tag_sp_X},
+        {"sp_Y",tag_sp_Y},
+        {"drpm",tag_drpm},
+        {"altm",tag_altm}
+    };
+
+
     connect(this, SIGNAL(finished()),this,SLOT(finish()));
 }
 
@@ -58,8 +91,8 @@ void Dataset::finish()
 
 void Dataset::process(QString &str)
 {
-    static auto _posx=0;
-    static auto _posy=0;
+    static auto _posx=0; //запоминаем предыдущее положение механизма по Х
+    static auto _posy=0; //запоминаем предыдущее положение механизма по Y
     auto n = str.indexOf("\"{", 10);
     if (n <= 0) return;
     auto t =str.indexOf(":")+1;
@@ -73,22 +106,32 @@ void Dataset::process(QString &str)
     for( const auto& el: list ) {
         QStringList pair = el.split(":");
         m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"));
-        if (pair[0]=="gmod") {
+        switch (m_tags[pair[0]]) {
+        case tag_gmod:
             m_data[stime][pair[0]] = decode(pair[1]);
+            break;
+        case tag_spxy:
+            _posx=spxy_to_X(pair[1].toInt(), _posx);
+            m_data[stime]["sp_X"] = 10*_posx;
+            _posy=spxy_to_Y(pair[1].toInt(), _posy);
+            m_data[stime]["sp_Y"] = -_posy/2;
+            break;
+        case tag_dig1:
 
-        } else {
-            if(pair[0]=="spxy"){
+            break;
+        case tag_svet: {
+            quint16 s=pair[1].toUInt();
+            m_data[stime]["svet1"] = s & 0xF;
+            m_data[stime]["svet2"] = (s >>= 4) & 0xF;
+            m_data[stime]["svet3"] = (s >>= 4) & 0xF;
+            m_data[stime]["svet4"] = (s >>= 4) & 0xF;
+            break;}
+        default:
+            m_data[stime][pair[0]] = pair[1].toInt();
+            //    qWarning()<<"Неизвестный тэг: "<<pair[0]<<" !";
+        }
 
-                _posx=spxy_to_X(pair[1].toInt(), _posx);
-                m_data[stime]["sp_X"] = 10*_posx;
-                _posy=spxy_to_Y(pair[1].toInt(), _posy);
-                //qDebug()<<"_posy:"<<_posy;
-                m_data[stime]["sp_Y"] = _posy/2;
-                //qDebug()<<_posx<<"spxy:"<<pair[1];
 
-            }
-            else
-                m_data[stime][pair[0]] = pair[1].toInt();
 
         }
         //добавляем тэг типа данных
@@ -103,7 +146,7 @@ void Dataset::process(QString &str)
             }
             else
                 m_data[stime]["_dat"] = 0;
-    }
+
     m_data_control.removeDuplicates();
     m_data_sensors.removeDuplicates();
     //qDebug()<<m_data_control;
@@ -134,7 +177,7 @@ int Dataset::spxy_to_X(const quint16 spxy, qint16 def)
 }
 
 
-int Dataset::spxy_to_Y(const quint16 spxy, qint16 def)
+int Dataset::   spxy_to_Y(const quint16 spxy, qint16 def)
 {
     //qDebug()<<">"<<(spxy>>8);
     switch (spxy>>8) {
