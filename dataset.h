@@ -35,7 +35,17 @@ enum TagsValue {tag_ana1,
                 tag_sp_X,
                 tag_sp_Y,
                 tag_drpm,
-                tag_altm};
+                tag_altm,
+                tag_d0,
+                tag_d1,
+                tag_d2,
+                tag_d3,
+                tag_d4,
+                tag_d5,
+                tag_d6,
+                tag_d7
+               };
+
 
 class Dataset : public QObject
 {
@@ -46,13 +56,15 @@ public slots:
     void finish();
 
 public:
+
+    Q_ENUM(TagsValue)
     explicit Dataset(QObject *parent = nullptr);
     QString source() const;
     void setSource(const QString &source);
 
     void process(QString &str);
 
-    QMap <QString, TagsValue> m_tags;
+    QMap <QString, QPair<TagsValue,QString>> m_tags;
     QMap < QString, QMap<QString, qint32> > m_data;
 
     QStringList getData_control() const;

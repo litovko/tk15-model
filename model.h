@@ -9,6 +9,9 @@
 #include "dataset.h"
 #include "third/qmlplot.h"
 
+typedef QMap < QString, QPair<QString, quint16> > TMapValues;
+Q_DECLARE_METATYPE(TMapValues)
+
 class Model : public QObject
 {
     Q_OBJECT
@@ -21,6 +24,7 @@ class Model : public QObject
     Q_PROPERTY(CustomPlotItem *chart READ chart WRITE setChart NOTIFY chartChanged)
     Q_PROPERTY(QStringList data_control READ data_control NOTIFY data_controlChanged)
     Q_PROPERTY(QStringList data_sensors READ data_sensors NOTIFY data_sensorsChanged)
+    //Q_PROPERTY(TMapValues values MEMBER m_values NOTIFY valuesChanged)
 
 public:
     explicit Model(QObject *parent = nullptr);
@@ -53,6 +57,8 @@ public:
     bool onload() const;
     void setOnload(bool onload);
 
+    TMapValues values() const;
+
 signals:
     void addressChanged();
     void portChanged();
@@ -64,7 +70,7 @@ signals:
     void progressChanged();
     void dataLoaded();
     void onloadChanged();
-
+    void valuesChanged();
 
 public slots:
     void setProgress(const quint16 &progress);
@@ -83,6 +89,7 @@ public slots:
     Q_INVOKABLE QString color(QString tag);
     Q_INVOKABLE void tagcolor(QString tag, QString color);
     Q_INVOKABLE void stop_readfile();
+    Q_INVOKABLE QString tag_description(const QString &tag);
 
 private:
     void sendData();
@@ -98,7 +105,7 @@ private:
     bool m_connected = false;
     bool m_onload = false;
 
-    QMap < QString, QPair<QString, quint16> > values;
+    TMapValues m_values;
     QMap < QString, QString>  inputs;
     QMap < QString, QPair<QString, qint32> > outputs;
     QMap < QString, QPair<QString, double>> graph_params; //цвет и коэффициент графика

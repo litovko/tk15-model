@@ -5,7 +5,7 @@ import HYCO 1.0
 import QtQuick.Controls 2.5
 
 
-Window {
+ApplicationWindow {
     id: mainwindow
     visible: true
     width: 700
@@ -16,6 +16,9 @@ Window {
     TK15 {
         id: tk15
         chart: plotarea.plot
+        Component.onCompleted: {
+            print (values)
+        }
     }
     Commands {
         id: cmd
@@ -32,8 +35,8 @@ Window {
         id: plotarea
         visible: !tk15.onload
         anchors {
-                    left: listView_s.right
-                    right: listView_c.left
+                    left: parent.left
+                    right: listView_s.left
                     bottom: parent.bottom
                     top: parent.top
                     margins: 50
@@ -42,7 +45,7 @@ Window {
 
     SensorsListView {
         id: listView_s
-        anchors.left: parent.left
+        anchors.right: listView_c.left
         anchors.bottom: parent.bottom
         model: tk15.data_sensors
         onDelegatChanged: {
@@ -68,4 +71,25 @@ Window {
             tk15.tagcolor(name, col)
         }
     }
+    menuBar: MenuBar {
+            Menu {
+                title: qsTr("&File")
+                Action { text: qsTr("&New...") }
+                Action { text: qsTr("&Open...") }
+                Action { text: qsTr("&Save") }
+                Action { text: qsTr("Save &As...") }
+                MenuSeparator { }
+                Action { text: qsTr("&Quit") }
+            }
+            Menu {
+                title: qsTr("&Edit")
+                Action { text: qsTr("Cu&t") }
+                Action { text: qsTr("&Copy") }
+                Action { text: qsTr("&Paste") }
+            }
+            Menu {
+                title: qsTr("&Help")
+                Action { text: qsTr("&About") }
+            }
+        }
 }

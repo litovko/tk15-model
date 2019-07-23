@@ -13,34 +13,46 @@ Dataset::Dataset(QObject *parent): QObject(parent)
 {
     //initialize tags map
     m_tags={
-        {"ana1",tag_ana1},
-        {"ana2",tag_ana2},
-        {"ana3",tag_ana3},
-        {"gmod",tag_gmod},
-        {"time",tag_time},
-        {"svet",tag_svet},
-        {"dig1",tag_dig1},
-        {"dc1v",tag_dc1v},
-        {"dc2v",tag_dc2v},
-        {"toil",tag_toil},
-        {"toi2",tag_toi2},
-        {"poil",tag_poil},
-        {"poi2",tag_poi2},
-        {"pwrv",tag_pwrv},
-        {"pwv2",tag_pwv2},
-        {"pwv3",tag_pwv3},
-        {"vchs",tag_vchs},
-        {"pwra",tag_pwra},
-        {"pwa2",tag_pwa2},
-        {"pwa3",tag_pwa3},
-        {"leak",tag_leak},
-        {"tang",tag_tang},
-        {"kren",tag_kren},
-        {"spxy",tag_spxy},
-        {"sp_X",tag_sp_X},
-        {"sp_Y",tag_sp_Y},
-        {"drpm",tag_drpm},
-        {"altm",tag_altm}
+        {"ana1", {tag_ana1, "Данные джойстика 1"}},
+        {"ana2", {tag_ana2, "Данные джойстика 2"}},
+        {"ana3", {tag_ana3, "Данные джойстика 2"}},
+        {"gmod", {tag_gmod, "Режим работы"}},
+        {"time", {tag_time, "Время"}},
+        {"svet", {tag_svet, "Яркость прожекторов"}},
+        {"svet1", {tag_svet1, "Яркость прожектора 1"}},
+        {"svet2", {tag_svet2, "Яркость прожектора 2"}},
+        {"svet3", {tag_svet3, "Яркость прожектора 3"}},
+        {"svet4", {tag_svet4, "Яркость прожектора 4"}},
+        {"dig1", {tag_dig1, "Данные сигналов управления"}},
+        {"dc1v", {tag_dc1v, "Напряжение +24 в ИП1"}},
+        {"dc2v", {tag_dc2v, "Напряжение +24 в ИП1"}},
+        {"toil", {tag_toil, "Температура масла 1"}},
+        {"toi2", {tag_toi2, "Температура масла 2"}},
+        {"poil", {tag_poil, "Давление масла 1"}},
+        {"poi2", {tag_poi2, "Давление масла 2"}},
+        {"pwrv", {tag_pwrv, "Напряжение фазы 1"}},
+        {"pwv2", {tag_pwv2, "Напряжение фазы 2"}},
+        {"pwv3", {tag_pwv3, "Напряжение фазы 3"}},
+        {"vchs", {tag_vchs, "Напряжение между нулем и землей "}},
+        {"pwra", {tag_pwra, "Ток фазы 1"}},
+        {"pwa2", {tag_pwa2, "Ток фазы 2"}},
+        {"pwa3", {tag_pwa3, "Ток фазы 3"}},
+        {"leak", {tag_leak, "Ток утечки"}},
+        {"tang", {tag_tang, "Тангаж - наклон"}},
+        {"kren", {tag_kren, "Крен "}},
+        {"spxy", {tag_spxy, "Данные координат"}},
+        {"sp_X", {tag_sp_X, "Координата X"}},
+        {"sp_Y", {tag_sp_Y, "Координата Y"}},
+        {"drpm", {tag_drpm, "Обороты в сек."}},
+        {"altm", {tag_altm, "Альтиметр"}},
+        {"d0", {tag_d0,   "Контакт 1 - двиг"}},
+        {"d1", {tag_d1,   "Контакт 2 - промывка"}},
+        {"d2", {tag_d2,   "Контакт 3 - резерв"}},
+        {"d3", {tag_d3,   "Контакт 4 - насос 2"}},
+        {"d4", {tag_d4,   "Контакт 5 - камера 1"}},
+        {"d5", {tag_d5,   "Контакт 6 - камера 1"}},
+        {"d6", {tag_d6,   "Контакт 7 - камера 1"}},
+        {"d7", {tag_d7,   "Контакт 8 - камера 1"}}
     };
 
 
@@ -106,7 +118,7 @@ void Dataset::process(QString &str)
     for( const auto& el: list ) {
         QStringList pair = el.split(":");
         m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"));
-        switch (m_tags[pair[0]]) {
+        switch (m_tags[pair[0]].first) {
         case tag_gmod:
             m_data[stime][pair[0]] = decode(pair[1]);
             break;
@@ -116,9 +128,26 @@ void Dataset::process(QString &str)
             _posy=spxy_to_Y(pair[1].toInt(), _posy);
             m_data[stime]["sp_Y"] = -_posy/2;
             break;
-        case tag_dig1:
-
+        case tag_dig1:{
+//            Гидравлический насос
+//            Насос промывки
+//            Резерв
+//            Гидравлический насос №2
+//            Камера 1 (инжектор)
+//            Камера 2 (инжектор)
+//            Камера 3 (инжектор)
+//            Камера 4 (инжектор)
+        uint dig = pair[1].toUInt();
+            m_data[stime]["d0"] = bool(dig&1);
+            m_data[stime]["d1"] = bool(dig&2);
+            m_data[stime]["d2"] = bool(dig&4);
+            m_data[stime]["d3"] = bool(dig&8);
+            m_data[stime]["d4"] = bool(dig&16);
+            m_data[stime]["d5"] = bool(dig&32);
+            m_data[stime]["d6"] = bool(dig&64);
+            m_data[stime]["d7"] = bool(dig&128);
             break;
+        }
         case tag_svet: {
             quint16 s=pair[1].toUInt();
             m_data[stime]["svet1"] = s & 0xF;

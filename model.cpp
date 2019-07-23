@@ -14,28 +14,30 @@ Model::Model(QObject *parent) : QObject(parent)
     //connect(this, SIGNAL(dataLoaded()), this, SLOT(plotdata()));
     //connect(this, SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
     //создаем массив переменных
-    values["type"] = {"Тип аппарата", 0};
-    values["toil"] = {"Температура масла 1", 0};
-    values["toi2"] = {"Температура масла 2", 0};
+    m_values["type"] = {"Тип аппарата", 0};
+    m_values["toil"] = {"Температура масла 1", 0};
+    m_values["toi2"] = {"Температура масла 2", 0};
     //values["temp"] = {"Температура контроллера", 0};
     //values["humi"] = {"Влажность контроллера", 0};
-    values["poil"] = {"Давление масла 1", 0};
-    values["poi2"] = {"Давление масла 2", 0};
-    values["drpm"] = {"Обороты", 0};
-    values["pwrv"] = {"Напряжение 1", 0};
-    values["pwv2"] = {"Напряжение 2", 0};
-    values["pwv3"] = {"Напряжение 3", 0};
+    m_values["poil"] = {"Давление масла 1", 0};
+    m_values["poi2"] = {"Давление масла 2", 0};
+    m_values["drpm"] = {"Обороты", 0};
+    m_values["pwrv"] = {"Напряжение 1", 0};
+    m_values["pwv2"] = {"Напряжение 2", 0};
+    m_values["pwv3"] = {"Напряжение 3", 0};
     //values["pwrs"] = {"Напряжение корпус-нейтраль", 0};
-    values["pwra"] = {"Ток фазы 1", 0};
-    values["pwa2"] = {"Ток фазы 2", 0};
-    values["pwa3"] = {"Ток фазы 3", 0};
-    values["leak"] = {"Ток утечки", 0};
-    values["altm"] = {"Альтиметр", 0};
-    values["dc1v"] = {"Питание +24В 1", 0};
-    values["dc2v"] = {"Питание +24В 2", 0};
-    values["spxy"] = {"Датчики положения", 24};
-    values["tang"] = {"Тангаж", 0};
-    values["kren"] = {"Крен", 0};
+    m_values["pwra"] = {"Ток фазы 1", 0};
+    m_values["pwa2"] = {"Ток фазы 2", 0};
+    m_values["pwa3"] = {"Ток фазы 3", 0};
+    m_values["leak"] = {"Ток утечки", 0};
+    m_values["altm"] = {"Альтиметр", 0};
+    m_values["dc1v"] = {"Питание +24В 1", 0};
+    m_values["dc2v"] = {"Питание +24В 2", 0};
+    m_values["spxy"] = {"Датчики положения", 24};
+    m_values["spxy"] = {"Датчики положения", 0};
+    m_values["spxy"] = {"Датчики положения", 0};
+    m_values["tang"] = {"Тангаж", 0};
+    m_values["kren"] = {"Крен", 0};
 
     outputs["out_x"] = {"Координата по оси X", 0};
     outputs["out_y"] = {"Координата по оси Y", 0};
@@ -48,19 +50,16 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["type"] = {"#FFFFFF", 0};
     graph_params["toil"] = {"#FFAAFF", 1};
     graph_params["toi2"] = {"#FFFFFF", 1};
-    //values["temp"] = {"Температура контроллера", 0};
-    //values["humi"] = {"Влажность контроллера", 0};
     graph_params["poil"] = {"#AAFF00", 1};
     graph_params["poi2"] = {"#FFFF00", 1};
     graph_params["drpm"] = {"#287628", 1};
     graph_params["pwrv"] = {"#FF1000", 1};
     graph_params["pwv2"] = {"#FF2000", 1};
     graph_params["pwv3"] = {"#FF3000", 1};
-    //values["pwrs"] = {"Напряжение корпус-нейтраль", 0};
     graph_params["pwra"] = {"#AA88FF", 0.1};
     graph_params["pwa2"] = {"#FF20FF", 0.1};
     graph_params["pwa3"] = {"#FF10FF", 0.1};
-    graph_params["leak"] = {"#0050FF", 1};
+    graph_params["leak"] = {"#0050FF", 10};
     graph_params["altm"] = {"#FF50FF", 1};
     graph_params["dc1v"] = {"#FF50FF", 0.1};
     graph_params["dc2v"] = {"#FF50FF", 0.1};
@@ -70,6 +69,7 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["tang"] = {"#FF90FF", 1.0};
     graph_params["kren"] = {"#FF007F", 1.0};
     graph_params["vchs"] = {"#DE517C", 1.0};
+
     graph_params["ana1"] = {"#5D5D00", 1};
     graph_params["ana2"] = {"#5D5D08", 1};
     graph_params["ana3"] = {"#5D5D10", 1};
@@ -79,9 +79,18 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["svet2"] = {"#5D5D1D", 1};
     graph_params["svet3"] = {"#5D5D1D", 1};
     graph_params["svet4"] = {"#5D5D1D", 1};
-    graph_params["gmod"] = {"#ADADAD", 10};
-    //"ana1", "ana2", "ana3", "gmod", "time", "svet", "dig1"
+    graph_params["gmod"]  = {"#ADADAD", 10};
+
+    graph_params["d0"] = {"#ADAD00", 5};
+    graph_params["d1"] = {"#ADAD10", 10};
+    graph_params["d2"] = {"#ADAD20", 15};
+    graph_params["d3"] = {"#ADAD30", 20};
+    graph_params["d4"] = {"#ADAD40", 25};
+    graph_params["d5"] = {"#ADAD50", 30};
+    graph_params["d6"] = {"#ADAD60", 35};
+    graph_params["d7"] = {"#ADAD70", 40};
     listen();
+    emit valuesChanged();
 }
 
 Model::~Model()
@@ -236,8 +245,8 @@ void Model::stop_listen()
 void Model::sendData()
 {
     QString str="{";
-    for (auto pair: values.keys()) {
-        str+=pair+":"+QString::number(values[pair].second)+";";
+    for (auto pair: m_values.keys()) {
+        str+=pair+":"+QString::number(m_values[pair].second)+";";
     }
     str.resize(str.length()-1);
     str+="}FFFFFF";
@@ -246,25 +255,25 @@ void Model::sendData()
 
 void Model::process()
 {
-    values["dc1v"].second = 235 + qrand()%20;
-    values["dc2v"].second = 235 + qrand()%20;
-    values["toil"].second = 20 + qrand()%2;
-    values["toi2"].second = 20 + qrand()%2;
+    m_values["dc1v"].second = 235 + qrand()%20;
+    m_values["dc2v"].second = 235 + qrand()%20;
+    m_values["toil"].second = 20 + qrand()%2;
+    m_values["toi2"].second = 20 + qrand()%2;
 
-    values["drpm"].second = 0;
-    values["pwrv"].second = 250 + qrand()%10;
-    values["pwv2"].second = 250 + qrand()%10;
-    values["pwv3"].second = 250 + qrand()%10;
+    m_values["drpm"].second = 0;
+    m_values["pwrv"].second = 250 + qrand()%10;
+    m_values["pwv2"].second = 250 + qrand()%10;
+    m_values["pwv3"].second = 250 + qrand()%10;
     //values["pwrs"] = {"Напряжение корпус-нейтраль", 0};
-    values["pwra"].second = qrand()%10;
-    values["pwa2"].second = qrand()%10;
-    values["pwa3"].second = qrand()%10;
-    values["leak"].second = qrand()%10;
-    values["altm"].second = 0;
+    m_values["pwra"].second = qrand()%10;
+    m_values["pwa2"].second = qrand()%10;
+    m_values["pwa3"].second = qrand()%10;
+    m_values["leak"].second = qrand()%10;
+    m_values["altm"].second = 0;
 
-    values["spxy"].second = 128+32768;
-    values["tang"].second = qrand()%10;
-    values["kren"].second = qrand()%10;
+    m_values["spxy"].second = 128+32768;
+    m_values["tang"].second = qrand()%10;
+    m_values["kren"].second = qrand()%10;
 
 
 }
@@ -279,7 +288,7 @@ void Model::printdata()
 
 void Model::toggle(QString tag, bool state)
 {
-    qDebug()<<"tag:"<<tag<<" state:"<<state;
+    //qDebug()<<"tag:"<<tag<<" state:"<<state;
     m_chart->CustomPlot()->graph(m_chart->index_by_name(tag))->setVisible(state);
     m_chart->CustomPlot()->replot();
 }
@@ -300,6 +309,12 @@ void Model::stop_readfile()
 {
     if(!m_dataset_ptr) return;
     m_dataset_ptr->abort();
+}
+
+QString Model::tag_description(const QString &tag)
+{
+    //qDebug()<<m_values[tag].first;
+    return m_dataset_ptr->m_tags[tag].second;
 }
 
 
@@ -355,12 +370,12 @@ void Model::plotdata()
             //qDebug()<<"set color to :"<<s;
             m_chart->CustomPlot()->graph(i)->setPen( QPen( graph_params[s].first ) );
             m_chart->CustomPlot()->graph(i)->setVisible(false);
+            m_chart->CustomPlot()->graph(i)->setSelectable(QCP::stWhole);
+            m_chart->CustomPlot()->graph(i)->selectionDecorator()->setBrush(QColor(255,255,255,20));
             if (s=="gmod")
                 m_chart->CustomPlot()->graph(i)->setBrush(QBrush(QColor(255,0,0,20)));
         }
-        //m_chart->CustomPlot()->graph(0)->setPen( QPen( Qt::red ) );
-        //y = el.second["pwra"];
-        //qDebug()<<">>"<<x<<"=="<< y;
+
     }
     ymin=0; ymax=300;
     qDebug()<<"xmin:"<<xmin<<" xmax:"<< xmax;
@@ -377,6 +392,11 @@ void Model::fill_out(const QString str)
     if (el.value()["_dat"]==2) {
         qDebug()<<el.key()<<"|"<<el.value();
     }
+}
+
+TMapValues Model::values() const
+{
+    return  m_values;
 }
 
 bool Model::onload() const

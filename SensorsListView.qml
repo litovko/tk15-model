@@ -17,7 +17,7 @@ ListView {
         x: 5
         width: 80
         height: 40
-        Rectangle{
+        Rectangle {
             anchors.fill: parent
             anchors.margins: 5
             id: rect
@@ -39,32 +39,32 @@ ListView {
                 focusPolicy: Qt.NoFocus
                 onCheckedChanged: {
                     listView.delegatChanged(txt.text, cb.checked)
-
                 }
                 ColorDialog {
-                       id: colorDialog
-                       title: "Please choose a color"
-                       visible: false
-                       onAccepted: {
-                           console.log("You chose: " + colorDialog.color)
-                           listView.tagcolorChanged(txt.text, colorDialog.color)
-                           colrect.color=colorDialog.color
-                           cb.checked=true
-                       }
-                       onRejected: {
-                           visible=false
-                       }
-                   }
+                    id: colorDialog
+                    title: "Please choose a color"
+                    visible: false
+                    onAccepted: {
+                        console.log("You chose: " + colorDialog.color)
+                        listView.tagcolorChanged(txt.text, colorDialog.color)
+                        colrect.color = colorDialog.color
+                        cb.checked = true
+                    }
+                    onRejected: {
+                        visible = false
+                    }
+                }
                 MouseArea {
                     id: ma
                     anchors.fill: parent
                     acceptedButtons: Qt.RightButton
+                    hoverEnabled: true
                     onClicked: if (mouse.button === Qt.RightButton) {
-                                   print("color:"+txt.text+":"+tk15.color(txt.text));
-                                   colorDialog.color=tk15.color(txt.text)
-                                   colorDialog.visible=true;
+                                   print("color:" + txt.text + ":" + tk15.color(
+                                             txt.text))
+                                   colorDialog.color = tk15.color(txt.text)
+                                   colorDialog.visible = true
                                }
-
                 }
                 indicator: Rectangle {
                     implicitWidth: 26
@@ -72,8 +72,29 @@ ListView {
                     x: cb.leftPadding
                     y: parent.height / 2 - height / 2
                     radius: 3
-                    border.color: cb.down ? "red": THEME.window_text_color
+                    border.width: ma.containsMouse * 2 + 1
+                    border.color: cb.down ? "red" : THEME.window_text_color
                     color: THEME.window_background_color
+                    Rectangle {
+                        visible: ma.containsMouse
+                        anchors.right: colrect.left
+                        anchors.verticalCenter: colrect.verticalCenter
+                        anchors.margins: 15
+                        height: tips.height + 4
+                        width:  tips.width + 4
+                        border.color: THEME.window_text_hilight_color
+                        border.width: 1
+                        color: "black"
+                        radius: 3
+                        z:2
+                        Text {
+                            anchors.centerIn: parent
+                            id: tips
+                            text: tk15.tag_description(txt.text)
+                            color: THEME.window_text_hilight_color
+                            font.pointSize: THEME.window_text_size
+                        }
+                    }
                     Rectangle {
                         id: colrect
                         width: 14
@@ -83,7 +104,6 @@ ListView {
                         radius: 2
                         color: cb.checked ? tk15.color(txt.text) : "#000000"
                         visible: cb.checked
-
                     }
                 }
             }
