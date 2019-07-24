@@ -5,7 +5,7 @@ import "theme/theme.js" as THEME
 
 Item {
     id: commands
-    property var command: ["PLAY", "STOP", "OPEN", "LISTEN", "SWITCH", "CANSEL"]
+    property var command: ["PLAY", "STOP", "OPEN", "LISTEN", "SWITCH", "CANSEL", "QUIT"]
     anchors.fill: parent
     visible: true
     focus: true
@@ -38,6 +38,9 @@ Item {
             break
         case "SWITCH":
             rect.visible = !rect.visible
+            break
+        case "QUIT":
+            Qt.quit()
             break
         default:
             print("default")

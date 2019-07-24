@@ -63,6 +63,7 @@ private:
     QString m_coord_x="";
     QString m_coord_y="";
     QCPItemLine *cursor = nullptr;
+    bool _onshow=false;
 
 private slots:
     void graphClicked( QCPAbstractPlottable* plottable );

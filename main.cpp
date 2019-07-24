@@ -13,6 +13,9 @@
 #include <QFile>
 #include <QTextStream>
 #include "third/qmlplot.h"
+#include "build.h"
+
+
 
 static QFile logfile;
 static QTextStream out(&logfile);
@@ -81,6 +84,7 @@ int main(int argc, char *argv[])
 
     QSettings settings(giko_name, giko_program);
     qDebug()<<QTime::currentTime().toString("hh:mm:ss:zzz ")<<"Start"<<giko_name<<"  "<<giko_program;
+    qDebug() << "Build number:" << BUILD <<"REV:"<<GIT_REV;
     QCoreApplication::setAttribute(Qt::AA_DisableShaderDiskCache);
     QApplication app(argc, argv);
     app.setOrganizationName(giko_name);

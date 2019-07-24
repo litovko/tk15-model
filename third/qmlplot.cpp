@@ -212,8 +212,8 @@ int CustomPlotItem::index_by_name(QString &name) //перебором по вс�
 
 void CustomPlotItem::showCursor(QMouseEvent *event)
 {
-    //qDebug() << Q_FUNC_INFO <<"@@@@";
-    //for my "cursor"########
+    if (_onshow) return;
+    _onshow=true;
         double mouseX = m_CustomPlot->xAxis->pixelToCoord(event->pos().x());
         double startPos = m_CustomPlot->yAxis->pixelToCoord(0);
         double endPos = m_CustomPlot->yAxis->pixelToCoord(m_CustomPlot->size().height());
@@ -222,33 +222,14 @@ void CustomPlotItem::showCursor(QMouseEvent *event)
         int index = m_CustomPlot->graph(0)->findBegin(mouseX);
         double x = m_CustomPlot->graph(0)->dataMainKey(index);
         setCoord_x(QTime::fromMSecsSinceStartOfDay(x*1000).toString());
-        double delta=0;
 
         for (auto gr:m_CustomPlot->selectedGraphs()) {
             setCoord_y(gr->dataMainValue(index));
             setGraph_name(gr->name());
             break;
         }
-//        for(int i=0; i<m_CustomPlot->selectedGraphs().count(); ++i)
-//        {
-//            if (!m_CustomPlot->graph(i)->visible()) continue;
-
-//            delta = m_CustomPlot->graph(i)->selectTest(event->pos(),0);
-//            if (delta>=1) continue; //далеко от графика
-//            setCoord_y(m_CustomPlot->graph(i)->dataMainValue(index));
-//            setGraph_name(m_CustomPlot->graph(i)->name());
-//            break; // прекращаем искать после первого найденного
-//            //qDebug() << index << "X:" << coord_x() << "Y:" << y;
-////            if(mouseX >= 0)
-////            {
-////                qDebug() << index << "X:" << x << "Y:" << y;
-////            }
-////            else
-////            {
-////                qDebug() << index << "X:" << 0 << "Y:" << 0;
-////            }
-//        }
         m_CustomPlot->replot();
+        _onshow=false;
 }
 
 QCustomPlot *CustomPlotItem::CustomPlot() const
