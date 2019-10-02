@@ -336,10 +336,10 @@ void Model::plotdata()
     qDebug()<<"count:"<<m_chart->CustomPlot()->graphCount();
 
     int x;
-    static auto _gmod=0;
+    static auto _gmod=0; //litovko сделано чтобы переключение режимов выглядело меандром - без наклонов.
     auto xmin = INT_MAX, xmax = INT_MIN;
     auto ymin = INT_MAX, ymax = INT_MIN;
-    for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временным отсчетам
+    for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временнЫм отсчетам
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
         //auto ;
@@ -357,7 +357,7 @@ void Model::plotdata()
                     m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second*graph_params[v.first].second);
                 else {
                     _gmod=v.second;
-                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, qQNaN());
+                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, qQNaN()); //линия до этой точки не отрисовывается.
                 }
             xmin = std::min(x,xmin);
             //ymin = std::min(y,ymin);

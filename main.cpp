@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName(giko_name);
     app.setOrganizationDomain("hyco.ru");
     app.setApplicationName(giko_program);
-    qmlRegisterType<Model>(giko_name, 1, 0, "MODEL");
+    qmlRegisterType<Model>(giko_name, 1, 0, "Model");
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
 
     QQmlApplicationEngine engine;

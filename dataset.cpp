@@ -166,7 +166,7 @@ void Dataset::process(QString &str)
         //добавляем тэг типа данных
         if( m_data[stime].contains("gmod") ) {
             m_data[stime]["_dat"] = 1;
-            m_data_control.append(m_data[stime].keys());
+            m_data_control.append(m_data[stime].keys()); //litovko думаю что здесь сильно тормозит каждый раз
         }
         else
             if( m_data[stime].contains("type") ) {
@@ -176,7 +176,7 @@ void Dataset::process(QString &str)
             else
                 m_data[stime]["_dat"] = 0;
 
-    m_data_control.removeDuplicates();
+    m_data_control.removeDuplicates(); //litovko думаю что здесь сильно тормозит каждый раз
     m_data_sensors.removeDuplicates();
     //qDebug()<<m_data_control;
 }

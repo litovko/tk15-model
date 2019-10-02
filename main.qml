@@ -13,7 +13,7 @@ ApplicationWindow {
     title: qsTr("TK-15 ТРЕНАЖЕР")
     color: THEME.window_background_color
 
-    TK15 {
+    Model {
         id: tk15
         chart: plotarea.plot
         Component.onCompleted: {
