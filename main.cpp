@@ -15,7 +15,7 @@
 #include "third/qmlplot.h"
 #include "build.h"
 
-
+//TODO Сделать запоминание и открывание последнего открытого пути файла.
 
 static QFile logfile;
 static QTextStream out(&logfile);

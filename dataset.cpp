@@ -126,7 +126,7 @@ void Dataset::process(QString &str)
             _posx=spxy_to_X(pair[1].toInt(), _posx);
             m_data[stime]["sp_X"] = 10*_posx;
             _posy=spxy_to_Y(pair[1].toInt(), _posy);
-            m_data[stime]["sp_Y"] = -_posy/2;
+            m_data[stime]["sp_Y"] = -_posy;
             break;
         case tag_dig1:{
 //            Гидравлический насос
@@ -208,16 +208,18 @@ int Dataset::spxy_to_X(const quint16 spxy, qint16 def)
 
 int Dataset::   spxy_to_Y(const quint16 spxy, qint16 def)
 {
-    //qDebug()<<">"<<(spxy>>8);
+    qDebug()<<">"<<(spxy>>8);
     switch (spxy>>8) {
         case 1: return -50;
         case 2: return 50;
         case 4: return 100;
         case 8: return 200;
         case 16: return 400;
+        case 36: return 600;
         case 32: return 600;
         case 64: return 1000;
         case 128: return 0;
+        case 0: return 0;
     }
     return def;
 }

@@ -2,7 +2,7 @@
 #define DATASET_H
 #include "QString"
 #include <QVariant>
-
+#pragma once
 
 enum TagsValue {tag_ana1,
                 tag_ana2,

@@ -1,6 +1,7 @@
 #ifndef QMLPLOT_H
 #define QMLPLOT_H
-
+#pragma once
+#include "qcustomplot/qcustomplot.h"
 #include <QtQuick>
 class QCustomPlot;
 class QCPAbstractPlottable;

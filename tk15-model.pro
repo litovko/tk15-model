@@ -13,10 +13,7 @@ system(ver.bat)
 BUILDVER = $$system("git.exe rev-list HEAD --count")
 DEFINES += GIT_REV=$$BUILDVER
 message($$BUILDVER)
-#build_nr.commands = ver.bat
-#build_nr.depends = FORCE
-#QMAKE_EXTRA_TARGETS += build_nr
-#PRE_TARGETDEPS += build_nr
+
 
 HEADERS  += build.h
 
