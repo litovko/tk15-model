@@ -47,11 +47,12 @@ Model::Model(QObject *parent) : QObject(parent)
     outputs["out_temp"] = {"Температура масла", 0};
 
     //создаем параметры графиков
-    graph_params["type"] = {"#FFFFFF", 0};
+    graph_params["type"] = {"#FFFFFF", 1};
     graph_params["toil"] = {"#FFAAFF", 1};
     graph_params["toi2"] = {"#FFFFFF", 1};
     graph_params["poil"] = {"#AAFF00", 1};
     graph_params["poi2"] = {"#FFFF00", 1};
+    graph_params["temp"] = {"#FFAA00", 1};
     graph_params["drpm"] = {"#287628", 1};
     graph_params["pwrv"] = {"#FF1000", 1};
     graph_params["pwv2"] = {"#FF2000", 1};
@@ -89,7 +90,7 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["d5"] = {"#ADAD50", 30};
     graph_params["d6"] = {"#ADAD60", 35};
     graph_params["d7"] = {"#ADAD70", 40};
-    listen();
+//    listen();
     emit valuesChanged();
 }
 
@@ -196,6 +197,8 @@ void Model::finishFileLoading()
     m_data_control=m_dataset_ptr->getData_control();
     m_data_sensors=m_dataset_ptr->getData_sensors();
     setOnload(false);
+    if (m_data_control.isEmpty() || m_data_sensors.isEmpty()) return;
+
     plotdata();
     emit data_controlChanged();
     emit data_sensorsChanged();
@@ -327,6 +330,7 @@ void Model::plotdata()
     //добавляем графики сенсоров
     for(auto sens: m_data_sensors) {
         m_chart->CustomPlot()->addGraph()->setName(sens);
+//        qDebug()<<sens;
     }
     //добавляем графики управляющих сигналов
     for(auto sens: m_data_control) {
@@ -334,7 +338,7 @@ void Model::plotdata()
     }
     m_data_sensors.removeAt(m_data_sensors.indexOf("time"));
     qDebug()<<"count:"<<m_chart->CustomPlot()->graphCount();
-
+    if (m_chart->CustomPlot()->graphCount() == 0) return;
     int x;
     static auto _gmod=0; //litovko сделано чтобы переключение режимов выглядело меандром - без наклонов.
     auto xmin = INT_MAX, xmax = INT_MIN;
@@ -342,10 +346,11 @@ void Model::plotdata()
     for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временнЫм отсчетам
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
-        //auto ;
-        //qDebug()<<"       t="<<el.first;
+//        qDebug()<<"       t="<<el.first;
         for (auto v: el.second.toStdMap() ) { //цикл по тегам в одном временном отсчете
-            //qDebug()<<"tag="<< v.first<<" v="<<v.second;
+//            if (el.first=="15:24:10:181")
+//                    qDebug()<<el.first<<":"<<v.first<<v.second;
+//            qDebug()<<"tag="<< v.first<<" v="<<v.second;
             int e=[this](QString theName)->int {
                 return m_chart->index_by_name(theName);
             }(v.first);
@@ -383,6 +388,7 @@ void Model::plotdata()
     m_chart->CustomPlot()->xAxis->setRange( xmin/1000.0, xmax/1000.0 );
     m_chart->CustomPlot()->yAxis->setRange( ymin, ymax*2 );
     m_chart->CustomPlot()->replot();
+    printdata();
 
 }
 

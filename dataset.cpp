@@ -4,6 +4,9 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QThread>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 //Dataset::Dataset()
 //{
 
@@ -18,6 +21,8 @@ Dataset::Dataset(QObject *parent): QObject(parent)
         {"ana3", {tag_ana3, "Данные джойстика 2"}},
         {"gmod", {tag_gmod, "Режим работы"}},
         {"time", {tag_time, "Время"}},
+        {"type", {tag_type, "Тип аппарата"}},
+        {"_dev", {tag__dev, "Номер платы"}},
         {"svet", {tag_svet, "Яркость прожекторов"}},
         {"svet1", {tag_svet1, "Яркость прожектора 1"}},
         {"svet2", {tag_svet2, "Яркость прожектора 2"}},
@@ -28,6 +33,7 @@ Dataset::Dataset(QObject *parent): QObject(parent)
         {"dc2v", {tag_dc2v, "Напряжение +24 в ИП1"}},
         {"toil", {tag_toil, "Температура масла 1"}},
         {"toi2", {tag_toi2, "Температура масла 2"}},
+        {"temp", {tag_toi2, "Температура"}},
         {"poil", {tag_poil, "Давление масла 1"}},
         {"poi2", {tag_poi2, "Давление масла 2"}},
         {"pwrv", {tag_pwrv, "Напряжение фазы 1"}},
@@ -36,8 +42,6 @@ Dataset::Dataset(QObject *parent): QObject(parent)
         {"vchs", {tag_vchs, "Напряжение между нулем и землей "}},
         {"pwra", {tag_pwra, "Ток фазы 1"}},
         {"pwa2", {tag_pwa2, "Ток фазы 2"}},
-        {"pwa3", {tag_pwa3, "Ток фазы 3"}},
-        {"leak", {tag_leak, "Ток утечки"}},
         {"tang", {tag_tang, "Тангаж - наклон"}},
         {"kren", {tag_kren, "Крен "}},
         {"spxy", {tag_spxy, "Данные координат"}},
@@ -57,6 +61,7 @@ Dataset::Dataset(QObject *parent): QObject(parent)
 
 
     connect(this, SIGNAL(finished()),this,SLOT(finish()));
+    qDebug()<<"Dataset object created.";
 }
 
 QString Dataset::source() const
@@ -89,20 +94,36 @@ void Dataset::getData()
         process(str);
         setProgress(100.0*file.pos()/size);
     }
+    file.close();
+
     emit finished();
 }
 
 void Dataset::finish()
 {
+
     m_data_control.removeAt(0);
     m_data_sensors.removeAt(0);
-    m_data_sensors.removeAt(m_data_sensors.indexOf("type"));
+//    m_data_sensors.removeAt(m_data_sensors.indexOf("type"));
     qDebug()<<"["<<m_data_control<<"]";
     qDebug()<<"["<<m_data_sensors<<"]";
+    qDebug()<<"15:25:09:416 ===="<<m_data["15:25:09:416"];
 }
 
 void Dataset::process(QString &str)
 {
+    if (_line == 0) {
+        if (str.indexOf("Open")>=0)
+            rig = Rigs::mgm7;  //TODO Надо во всех логах сразу писать название девайса.
+        else
+            rig = Rigs::mgbu;
+    }
+    _line++;
+    if (rig ==  Rigs::mgm7) {
+//        qDebug()<<"line:"<<_line;
+        process2(str);
+        return;
+    }
     static auto _posx=0; //запоминаем предыдущее положение механизма по Х
     static auto _posy=0; //запоминаем предыдущее положение механизма по Y
     auto n = str.indexOf("\"{", 10);
@@ -155,6 +176,7 @@ void Dataset::process(QString &str)
             m_data[stime]["svet3"] = (s >>= 4) & 0xF;
             m_data[stime]["svet4"] = (s >>= 4) & 0xF;
             break;}
+
         default:
             m_data[stime][pair[0]] = pair[1].toInt();
             //    qWarning()<<"Неизвестный тэг: "<<pair[0]<<" !";
@@ -181,14 +203,136 @@ void Dataset::process(QString &str)
     //qDebug()<<m_data_control;
 }
 
+void Dataset::process2(QString &str) //TODO Обработка строки из JSON
+{
+    static auto _posx=0; //запоминаем предыдущее положение механизма по Х
+    static auto _posy=0; //запоминаем предыдущее положение механизма по Y
+        bool _send = str.indexOf("sent:");
+    auto n = str.indexOf("[{", 20);
+    if (n <= 0) return;
+    auto t =str.indexOf("}]")+1;
+    QString st = str.mid(n, t-n+1);
+    QString stime = str.mid(8,12);
+//    qDebug()<<stime<<"1>>"<<st;
+    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"));
+    st.replace("\\","");
+//    qDebug()<<stime<<"2>>"<<st;
+    QJsonDocument doc = QJsonDocument::fromJson(st.toUtf8());
+//    qDebug()<<"doc:"<<doc.isObject()<<doc.isNull()<<doc.isEmpty();
+    if (doc.isArray()) {
+        QJsonArray ja=doc.array();
+//        qDebug()<<"ja:"<<ja;
+        for (int i = 0; i < ja.size(); i++) { // цикл по каждой плате
+          if (_send && i==1) break; //  вторую плату для данных пропускаем
+          QJsonObject jv= ja.at(i).toObject();
+           for ( auto&& key: jv.keys()) {
+//              qDebug()<< i << "m:" << key;
+              switch (m_tags[key].first) {
+              case tag_type:
+                  m_data[stime][key] = decode(jv[key].toString());
+
+                  break;
+              case tag_gmod:
+                  m_data[stime][key] = decode(jv[key].toString());
+                  break;
+              case tag_spxy:
+                  _posx=spxy_to_X(jv[key].toString().toInt(), _posx);
+                  m_data[stime]["sp_X"] = 10*_posx;
+                  _posy=spxy_to_Y(jv[key].toString().toInt(), _posy);
+                  m_data[stime]["sp_Y"] = -_posy;
+                  break;
+              case tag_dig1:{
+      //            Гидравлический насос
+      //            Насос промывки
+      //            Резерв
+      //            Гидравлический насос №2
+      //            Камера 1 (инжектор)
+      //            Камера 2 (инжектор)
+      //            Камера 3 (инжектор)
+      //            Камера 4 (инжектор)
+              uint dig = jv[key].toString().toUInt();
+                  m_data[stime]["d0"] = bool(dig&1);
+                  m_data[stime]["d1"] = bool(dig&2);
+                  m_data[stime]["d2"] = bool(dig&4);
+                  m_data[stime]["d3"] = bool(dig&8);
+                  m_data[stime]["d4"] = bool(dig&16);
+                  m_data[stime]["d5"] = bool(dig&32);
+                  m_data[stime]["d6"] = bool(dig&64);
+                  m_data[stime]["d7"] = bool(dig&128);
+                  break;
+              }
+              case tag_svet: {
+
+                  quint16 s=jv[key].toString().toUInt();
+                  m_data[stime]["svet1"] = s & 0xF;
+                  m_data[stime]["svet2"] = (s >>= 4) & 0xF;
+                  m_data[stime]["svet3"] = (s >>= 4) & 0xF;
+                  m_data[stime]["svet4"] = (s >>= 4) & 0xF;
+                  break;}
+//              case tag__dev:{
+//                  if (_send && jv["_dev"].toInt() == 0)
+//                      goto exit_for ; // для второй борды мы не передаем данные.
+//                  else {
+//                      m_data[stime]["_dev"] = jv["_dev"].toInt();
+//                      break;
+//                  }
+//              }
+//              case tag_ana1:
+//              case tag_ana2:
+//              case tag_ana3: {
+//                  if (m_data[stime]["_dev"] == 0)
+//                     {
+////                      qDebug()<<"_dev:"<<m_data[stime]["_dev"] ;
+//                      break;
+//                  }
+
+//              }
+              default:{
+                  m_data[stime][key] = jv[key].toInt();
+//                  if (stime == "15:24:10:181")
+//                      qDebug()<<stime<<"::::"<<key<<m_data[stime][key]<<jv[key].toInt();
+
+//                  if (key=="ana1")
+//                      if (m_data[stime][key]>0)
+//                          qDebug()<<stime<<":"<<key<<m_data[stime][key];
+                  //    qWarning()<<"Неизвестный тэг: "<<pair[0]<<" !";
+              }
+//                  qDebug()<<"15:24:10:181 ===="<<m_data["15:24:10:181"]<<"stime:"<<stime;
+              }
+
+
+
+              }
+              //добавляем тэг типа данных
+              if( m_data[stime].contains("gmod") ) {
+                  m_data[stime]["_dat"] = 1;
+                  m_data_control.append(m_data[stime].keys()); //litovko думаю что здесь сильно тормозит каждый раз
+              }
+              else
+                  if( m_data[stime].contains("type") ) {
+                      m_data[stime]["_dat"] = 2;
+                      m_data_sensors.append(m_data[stime].keys());
+                  }
+                  else
+                      m_data[stime]["_dat"] = 0;
+//                qDebug()<<">>"<<m_data[stime];
+          m_data_control.removeDuplicates(); //litovko думаю что здесь сильно тормозит каждый раз
+          m_data_sensors.removeDuplicates();
+          }
+
+    }
+
+}
+
 int Dataset::decode(const QString &mode)
 {
-    if (mode=="grup1") return 1;
-    if (mode=="grup2") return 2;
-    if (mode=="grup3") return 3;
-    if (mode=="grup4") return 4;
-    if (mode=="grup5") return 5;
-    return 0;
+    if (mode=="grup1") return 10;
+    if (mode=="grup2") return 20;
+    if (mode=="grup3") return 30;
+    if (mode=="grup4") return 40;
+    if (mode=="grup5") return 50;
+    if (mode=="npa__") return 70;
+    return 222;
 }
 
 int Dataset::spxy_to_X(const quint16 spxy, qint16 def)
@@ -208,7 +352,7 @@ int Dataset::spxy_to_X(const quint16 spxy, qint16 def)
 
 int Dataset::   spxy_to_Y(const quint16 spxy, qint16 def)
 {
-    qDebug()<<">"<<(spxy>>8);
+//    qDebug()<<">"<<(spxy>>8);
     switch (spxy>>8) {
         case 1: return -50;
         case 2: return 50;
@@ -229,8 +373,8 @@ void Dataset::setProgress(const quint16 &progress)
     if( m_progress==progress) return;
     m_progress = progress;
     emit progressChanged(m_progress);
-    //qDebug()<<"progress:"<<m_progress;
-    //QCoreApplication::processEvents();
+//    qDebug()<<"progress:"<<m_progress;
+//    QCoreApplication::processEvents();
 }
 
 void Dataset::abort()

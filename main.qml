@@ -10,7 +10,7 @@ ApplicationWindow {
     visible: true
     width: 1200
     height: 700
-    title: qsTr("TK-15 ТРЕНАЖЕР")
+    title: qsTr("Просмотр логов")
     color: THEME.window_background_color
 
     Model {

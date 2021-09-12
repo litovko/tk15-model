@@ -73,10 +73,9 @@ Item {
     }
     Rectangle {
         id: loaddata
-        //visible: tk15.onload
+        visible: tk15.onload
         width: 300
         height: 110
-        visible: tk15.onload
         radius: 5
         border.color: THEME.window_text_color
         color: THEME.window_dialog_background_color

@@ -9,6 +9,8 @@ enum TagsValue {tag_ana1,
                 tag_ana3,
                 tag_gmod,
                 tag_time,
+                tag_type,
+                tag__dev,
                 tag_svet,
                 tag_svet1,
                 tag_svet2,
@@ -45,6 +47,10 @@ enum TagsValue {tag_ana1,
                 tag_d6,
                 tag_d7
                };
+enum Rigs {
+    mgbu,
+    mgm7
+};
 
 
 class Dataset : public QObject
@@ -58,11 +64,15 @@ public slots:
 public:
 
     Q_ENUM(TagsValue)
+    Q_ENUM(Rigs)
+
+    Rigs rig;
     explicit Dataset(QObject *parent = nullptr);
     QString source() const;
     void setSource(const QString &source);
 
     void process(QString &str);
+    void process2(QString &str);
 
     QMap <QString, QPair<TagsValue,QString>> m_tags;
     QMap < QString, QMap<QString, qint32> > m_data;
@@ -87,6 +97,7 @@ private:
     QStringList m_data_control;
     QStringList m_data_sensors;
     bool _abort=false;
+    long int _line=0;
 };
 
 #endif // DATASET_H
