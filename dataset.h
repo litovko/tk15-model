@@ -45,7 +45,8 @@ enum TagsValue {tag_ana1,
                 tag_d4,
                 tag_d5,
                 tag_d6,
-                tag_d7
+                tag_d7,
+                tag_cpdo
                };
 enum Rigs {
     mgbu,
@@ -75,7 +76,7 @@ public:
     void process2(QString &str);
 
     QMap <QString, QPair<TagsValue,QString>> m_tags;
-    QMap < QString, QMap<QString, qint32> > m_data;
+    QMap < QString, QMap<QString, qint64> > m_data;
 
     QStringList getData_control() const;
 

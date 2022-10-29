@@ -35,7 +35,7 @@ Rectangle {
         }
         Rectangle {
             color: "transparent"
-            border.color: THEME.plot_border_color
+            border.color: THEME.window_text_hilight_color
             height: THEME.window_text_size + 4
             width: 80
             Text {

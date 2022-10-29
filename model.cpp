@@ -50,7 +50,7 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["type"] = {"#FFFFFF", 1};
     graph_params["toil"] = {"#FFAAFF", 1};
     graph_params["toi2"] = {"#FFFFFF", 1};
-    graph_params["poil"] = {"#AAFF00", 1};
+    graph_params["poil"] = {"#FFFFFF", 0.0001};
     graph_params["poi2"] = {"#FFFF00", 1};
     graph_params["temp"] = {"#FFAA00", 1};
     graph_params["drpm"] = {"#287628", 1};
@@ -82,14 +82,15 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["svet4"] = {"#5D5D1D", 1};
     graph_params["gmod"]  = {"#ADADAD", 10};
 
-    graph_params["d0"] = {"#ADAD00", 5};
-    graph_params["d1"] = {"#ADAD10", 10};
-    graph_params["d2"] = {"#ADAD20", 15};
-    graph_params["d3"] = {"#ADAD30", 20};
-    graph_params["d4"] = {"#ADAD40", 25};
-    graph_params["d5"] = {"#ADAD50", 30};
-    graph_params["d6"] = {"#ADAD60", 35};
-    graph_params["d7"] = {"#ADAD70", 40};
+    graph_params["d0"] = {"#ADAD00", 10};
+    graph_params["d1"] = {"#ADAD10", 11};
+    graph_params["d2"] = {"#ADAD20", 12};
+    graph_params["d3"] = {"#ADAD30", 13};
+    graph_params["d4"] = {"#ADAD40", 14};
+    graph_params["d5"] = {"#ADAD50", 15};
+    graph_params["d6"] = {"#ADAD60", 16};
+    graph_params["d7"] = {"#ADAD70", 17};
+    graph_params["dig1"] = {"#ADAD70", 1};
 //    listen();
     emit valuesChanged();
 }
@@ -218,7 +219,7 @@ void Model::play()
 
 
     qDebug()<<"s:"<<first<<" f:"<<last;
-    printdata();
+//    printdata();
     m_play_timer.start(100);
 }
 
@@ -258,33 +259,34 @@ void Model::sendData()
 
 void Model::process()
 {
-    m_values["dc1v"].second = 235 + qrand()%20;
-    m_values["dc2v"].second = 235 + qrand()%20;
-    m_values["toil"].second = 20 + qrand()%2;
-    m_values["toi2"].second = 20 + qrand()%2;
+//    m_values["dc1v"].second = 235 + rand()%20;
+//    m_values["dc2v"].second = 235 + rand()%20;
+//    m_values["toil"].second = 20 + qrand()%2;
+//    m_values["toi2"].second = 20 + qrand()%2;
 
-    m_values["drpm"].second = 0;
-    m_values["pwrv"].second = 250 + qrand()%10;
-    m_values["pwv2"].second = 250 + qrand()%10;
-    m_values["pwv3"].second = 250 + qrand()%10;
-    //values["pwrs"] = {"Напряжение корпус-нейтраль", 0};
-    m_values["pwra"].second = qrand()%10;
-    m_values["pwa2"].second = qrand()%10;
-    m_values["pwa3"].second = qrand()%10;
-    m_values["leak"].second = qrand()%10;
-    m_values["altm"].second = 0;
+//    m_values["drpm"].second = 0;
+//    m_values["pwrv"].second = 250 + qrand()%10;
+//    m_values["pwv2"].second = 250 + qrand()%10;
+//    m_values["pwv3"].second = 250 + qrand()%10;
+//    //values["pwrs"] = {"Напряжение корпус-нейтраль", 0};
+//    m_values["pwra"].second = qrand()%10;
+//    m_values["pwa2"].second = qrand()%10;
+//    m_values["pwa3"].second = qrand()%10;
+//    m_values["leak"].second = qrand()%10;
+//    m_values["altm"].second = 0;
 
-    m_values["spxy"].second = 128+32768;
-    m_values["tang"].second = qrand()%10;
-    m_values["kren"].second = qrand()%10;
+//    m_values["spxy"].second = 128+32768;
+//    m_values["tang"].second = qrand()%10;
+//    m_values["kren"].second = qrand()%10;
 
 
 }
 
 void Model::printdata()
 {
+    qDebug()<<"m_data.count:"<<m_dataset_ptr->m_data.count();
     for(auto el: m_dataset_ptr->m_data.toStdMap()){
-        if (el.second["_dat"]==0) qDebug()<<el.first<<"|"<<el;
+         qDebug()<<el.first<<"|"<<el.second;
     }
 
 }
@@ -324,8 +326,9 @@ QString Model::tag_description(const QString &tag)
 
 void Model::plotdata()
 {
+    qDebug()<<"plotdata: m_data.count:"<<m_dataset_ptr->m_data.count();
     //yAxis->setTickLabelType(QCPAxis::ltDateTime);
-    //yAxis->setDateTimeFormat("hh:mm:ss");
+
     m_chart->CustomPlot()->clearGraphs();
     //добавляем графики сенсоров
     for(auto sens: m_data_sensors) {
@@ -346,7 +349,11 @@ void Model::plotdata()
     for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временнЫм отсчетам
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
-//        qDebug()<<"       t="<<el.first;
+        x = QTime::fromString(el.first,"hh:mm:ss:zzz").msecsSinceStartOfDay();
+        qDebug()<<x<<el.first<<QString("%1").arg((( double)(x)/1000.0)) << QString::number((( double)(x)/1000.0), 'g', 8);
+        xmin = std::min(x,xmin);
+        xmax = std::max(x,xmax);
+//        qDebug()<<"t="<<el.first<<"xmin:"<<xmin<<"x:"<<x;
         for (auto v: el.second.toStdMap() ) { //цикл по тегам в одном временном отсчете
 //            if (el.first=="15:24:10:181")
 //                    qDebug()<<el.first<<":"<<v.first<<v.second;
@@ -356,39 +363,46 @@ void Model::plotdata()
             }(v.first);
             if (e < 0) continue;
             if (v.first!="gmod")
-                m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second*graph_params[v.first].second);
+                m_chart->CustomPlot()->graph(e)->addData(double(x)/1000.0, v.second*graph_params[v.first].second);
             else
                 if (_gmod==v.second)
-                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, v.second*graph_params[v.first].second);
+                    m_chart->CustomPlot()->graph(e)->addData(double(x)/1000.0, v.second*graph_params[v.first].second);
                 else {
                     _gmod=v.second;
-                    m_chart->CustomPlot()->graph(e)->addData(x/1000.0, qQNaN()); //линия до этой точки не отрисовывается.
+                    m_chart->CustomPlot()->graph(e)->addData(double(x)/1000.0, qQNaN()); //линия до этой точки не отрисовывается.
                 }
-            xmin = std::min(x,xmin);
+
             //ymin = std::min(y,ymin);
-            xmax = std::max(x,xmax);
+
             //ymax = std::max(y,ymax);
         }
-        for (int i=0; i<m_chart->CustomPlot()->graphCount(); ++i)
-        {
-            auto s=m_chart->CustomPlot()->graph(i)->name();
-            //qDebug()<<"set color to :"<<s;
-            m_chart->CustomPlot()->graph(i)->setPen( QPen( graph_params[s].first ) );
-            m_chart->CustomPlot()->graph(i)->setVisible(false);
-            m_chart->CustomPlot()->graph(i)->setSelectable(QCP::stWhole);
-            m_chart->CustomPlot()->graph(i)->selectionDecorator()->setBrush(QColor(255,255,255,20));
-            if (s=="gmod")
-                m_chart->CustomPlot()->graph(i)->setBrush(QBrush(QColor(255,0,0,20)));
-        }
 
+
+    }
+    for (int i=0; i<m_chart->CustomPlot()->graphCount(); ++i)
+    {
+        auto s=m_chart->CustomPlot()->graph(i)->name();
+        qDebug()<<"Graph:"<<s<<" datacount:"<<m_chart->CustomPlot()->graph(i)->dataCount();
+        //qDebug()<<"set color to :"<<s;
+        m_chart->CustomPlot()->graph(i)->setPen( QPen( graph_params[s].first ) );
+        m_chart->CustomPlot()->graph(i)->setVisible(false);
+        m_chart->CustomPlot()->graph(i)->setSelectable(QCP::stWhole);
+        m_chart->CustomPlot()->graph(i)->selectionDecorator()->setBrush(QColor(255,255,255,20));
+        if (s=="gmod")
+            m_chart->CustomPlot()->graph(i)->setBrush(QBrush(QColor(255,0,0,20)));
     }
     ymin=0; ymax=300;
     qDebug()<<"xmin:"<<xmin<<" xmax:"<< xmax;
     qDebug()<<"ymin:"<<ymin<<" ymax:"<< ymax;
     m_chart->CustomPlot()->xAxis->setRange( xmin/1000.0, xmax/1000.0 );
+    QSharedPointer<QCPAxisTickerTime> dateTimeTicker(new QCPAxisTickerTime);
+////    dateTimeTicker->setTimeSpec(Qt::UTC);
+    dateTimeTicker->setTimeFormat("%h:%m:%z");
+//    m_chart->CustomPlot()->xAxis->setTicker(dateTimeTicker);
+//    m_chart->CustomPlot()->xAxis->setNumberFormat("mm:ss:zzz");
     m_chart->CustomPlot()->yAxis->setRange( ymin, ymax*2 );
     m_chart->CustomPlot()->replot();
-    printdata();
+//    printdata();
 
 }
 

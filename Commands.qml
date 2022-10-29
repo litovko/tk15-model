@@ -59,7 +59,7 @@ Item {
         if (event.key === Qt.Key_F7)
             execute("SWITCH")
     }
-
+// TODO зделать запоминание последнего каталога
     FileDialog {
         id: fileDialog
         title: "Выберите файл"

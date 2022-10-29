@@ -1,5 +1,6 @@
 QT += quick network printsupport
 QT += qml 3dcore 3drender 3dinput 3dlogic 3dextras 3danimation
+ QT += gui
 CONFIG += c++11 console
 
 DEFINES += QT_DEPRECATED_WARNINGS

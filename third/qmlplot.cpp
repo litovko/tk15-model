@@ -104,25 +104,25 @@ void CustomPlotItem::paint( QPainter* painter )
 
 void CustomPlotItem::mousePressEvent( QMouseEvent* event )
 {
-    //qDebug() << Q_FUNC_INFO<<"!!!";
+    qDebug() << Q_FUNC_INFO<<"!!!";
     routeMouseEvents( event );
 }
 
 void CustomPlotItem::mouseReleaseEvent( QMouseEvent* event )
 {
-    //qDebug() << Q_FUNC_INFO<<"###";
+    qDebug() << Q_FUNC_INFO<<"###";
     routeMouseEvents( event );
 }
 
 void CustomPlotItem::mouseMoveEvent( QMouseEvent* event )
 {
-    //qDebug() << Q_FUNC_INFO<<"###";
+    //qDebug() << Q_FUNC_INFO<<"***";
     routeMouseEvents( event );
 }
 
 void CustomPlotItem::mouseDoubleClickEvent( QMouseEvent* event )
 {
-    //qDebug() << Q_FUNC_INFO<<"|||"<<m_name;
+    qDebug() << Q_FUNC_INFO<<"|||"<<m_name;
     routeMouseEvents( event );
 }
 
@@ -221,10 +221,12 @@ void CustomPlotItem::showCursor(QMouseEvent *event)
         cursor->end->setCoords(mouseX, endPos);
         int index = m_CustomPlot->graph(0)->findBegin(mouseX);
         double x = m_CustomPlot->graph(0)->dataMainKey(index);
-        setCoord_x(QTime::fromMSecsSinceStartOfDay(x*1000).toString());
+        setCoord_x(QTime::fromMSecsSinceStartOfDay(x*1000).toString("hh:mm:ss:zzz"));
 
         for (auto gr:m_CustomPlot->selectedGraphs()) {
+            qDebug()<<"curs"<<gr->name()<<"index:"<<index<<"maxindex:"<<gr->dataCount()<<mouseX;
             setCoord_y(gr->dataMainValue(index));
+            qDebug()<<"::";
             setGraph_name(gr->name());
             break;
         }
@@ -255,7 +257,9 @@ void CustomPlotItem::routeWheelEvents( QWheelEvent* event )
 {
     if (m_CustomPlot)
     {
-        QWheelEvent* newEvent = new QWheelEvent( event->pos(), event->delta(), event->buttons(), event->modifiers(), event->orientation() );
+
+//        QWheelEvent* newEvent = new QWheelEvent(event->position(), event->globalPosition(), event->position(), event->pixelDelta(),  event->angleDelta(), event->buttons(), event->modifiers() );
+        QWheelEvent* newEvent =  new QWheelEvent(event->position(), event->globalPosition(), event->pixelDelta(), event->angleDelta(), event->buttons(), event->modifiers(), event->phase(), false);
         QCoreApplication::postEvent( m_CustomPlot, newEvent );
     }
 }

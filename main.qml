@@ -16,9 +16,9 @@ ApplicationWindow {
     Model {
         id: tk15
         chart: plotarea.plot
-        Component.onCompleted: {
-            print (values)
-        }
+//        Component.onCompleted: {
+//            print (values)
+//        }
     }
     Commands {
         id: cmd
