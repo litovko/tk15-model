@@ -46,7 +46,12 @@ enum TagsValue {tag_ana1,
                 tag_d5,
                 tag_d6,
                 tag_d7,
-                tag_cpdo
+                tag_cpdo,
+                tag_azmt,
+                tag_magx,
+                tag_magy,
+                tag_magz,
+                tag_vtime
                };
 enum Rigs {
     mgbu,
@@ -71,9 +76,11 @@ public:
     explicit Dataset(QObject *parent = nullptr);
     QString source() const;
     void setSource(const QString &source);
+    void setRig(const QString &rigtype);
 
     void process(QString &str);
     void process2(QString &str);
+    void process3(QString &str);
 
     QMap <QString, QPair<TagsValue,QString>> m_tags;
     QMap < QString, QMap<QString, qint64> > m_data;

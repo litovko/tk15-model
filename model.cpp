@@ -62,6 +62,10 @@ Model::Model(QObject *parent) : QObject(parent)
     graph_params["pwa3"] = {"#FF10FF", 0.1};
     graph_params["leak"] = {"#0050FF", 10};
     graph_params["altm"] = {"#FF50FF", 1};
+    graph_params["azmt"] = {"#FF0000", 1};
+    graph_params["magx"] = {"#FFFFFF", 1};
+    graph_params["magy"] = {"#FF00FF", 1};
+    graph_params["magz"] = {"#00FF00", 1};
     graph_params["dc1v"] = {"#FF50FF", 0.1};
     graph_params["dc2v"] = {"#FF50FF", 0.1};
     graph_params["spxy"] = {"#FF80FF", 1};
@@ -183,6 +187,7 @@ void Model::readfile()
     qDebug()<<"THREAD:"<<QThread::currentThreadId();
     m_dataset_ptr = new Dataset();
     m_dataset_ptr->setSource(m_filename);
+    m_dataset_ptr->setRig(m_rigtype);
     m_dataset_ptr->moveToThread(&m_thread);
     connect(&m_thread,      SIGNAL(started()),  m_dataset_ptr, SLOT(getData()));
     connect(m_dataset_ptr,  SIGNAL(progressChanged(quint16)), this, SLOT(setProgress(quint16)));
@@ -197,6 +202,8 @@ void Model::finishFileLoading()
     setProgress(0);
     m_data_control=m_dataset_ptr->getData_control();
     m_data_sensors=m_dataset_ptr->getData_sensors();
+    qDebug()<<"##"<<m_data_control;
+    qDebug()<<"#@"<<m_data_sensors;
     setOnload(false);
     if (m_data_control.isEmpty() || m_data_sensors.isEmpty()) return;
 
@@ -349,7 +356,7 @@ void Model::plotdata()
     for(auto el: m_dataset_ptr->m_data.toStdMap()) { //цикл по всему набору данных - по временнЫм отсчетам
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
-        x = QTime::fromString(el.first,"hh:mm:ss:zzz").msecsSinceStartOfDay();
+        x = QTime::fromString(el.first,"hh:mm:ss.zzz").msecsSinceStartOfDay(); // вот тут уже неправильно - либо точка либо двоеточие - зависит от аппарата!!! litovko
         qDebug()<<x<<el.first<<QString("%1").arg((( double)(x)/1000.0)) << QString::number((( double)(x)/1000.0), 'g', 8);
         xmin = std::min(x,xmin);
         xmax = std::max(x,xmax);
@@ -412,6 +419,19 @@ void Model::fill_out(const QString str)
     if (el.value()["_dat"]==2) {
         qDebug()<<el.key()<<"|"<<el.value();
     }
+}
+
+const QString &Model::rigtype() const
+{
+    return m_rigtype;
+}
+
+void Model::setRigtype(const QString &newRigtype)
+{
+    if (m_rigtype == newRigtype)
+        return;
+    m_rigtype = newRigtype;
+    emit rigtypeChanged();
 }
 
 TMapValues Model::values() const

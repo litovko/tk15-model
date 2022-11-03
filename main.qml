@@ -3,6 +3,7 @@ import QtQuick.Window 2.12
 import "theme/theme.js" as THEME
 import HYCO 1.0
 import QtQuick.Controls 2.5
+import Qt.labs.settings 1.1
 
 
 ApplicationWindow {
@@ -12,6 +13,11 @@ ApplicationWindow {
     height: 700
     title: qsTr("Просмотр логов")
     color: THEME.window_background_color
+    property alias rigtype: tk15.rigtype
+
+    Settings {
+
+    }
 
     Model {
         id: tk15
@@ -27,7 +33,7 @@ ApplicationWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         id: f
-        text: qsTr(tk15.filename)
+        text: qsTr(tk15.filename) + " аппарат:" + rigtype
         color: THEME.window_text_color
         height: THEME.window_text_size
     }

@@ -38,7 +38,7 @@ QML_DESIGNER_IMPORT_PATH =
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
-DESTDIR = D:\dest.rig.5.12.msvc
+#DESTDIR = D:\dest.rig.5.12.msvc
 
 HEADERS += \
     dataset.h \

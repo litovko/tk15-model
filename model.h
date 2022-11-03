@@ -59,6 +59,9 @@ public:
 
     TMapValues values() const;
 
+    const QString &rigtype() const;
+    void setRigtype(const QString &newRigtype);
+
 signals:
     void addressChanged();
     void portChanged();
@@ -71,6 +74,8 @@ signals:
     void dataLoaded();
     void onloadChanged();
     void valuesChanged();
+
+    void rigtypeChanged();
 
 public slots:
     void setProgress(const quint16 &progress);
@@ -124,7 +129,9 @@ private:
     CustomPlotItem *m_chart=nullptr;
     QStringList m_data_control;
     QStringList m_data_sensors;
+    QString m_rigtype = "mgbuk";
 
+    Q_PROPERTY(QString rigtype READ rigtype WRITE setRigtype NOTIFY rigtypeChanged)
 };
 
 #endif // MODEL_H

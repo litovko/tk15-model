@@ -58,7 +58,12 @@ Dataset::Dataset(QObject *parent): QObject(parent)
         {"d5", {tag_d5,   "Контакт 6 - камера 1"}},
         {"d6", {tag_d6,   "Контакт 7 - камера 1"}},
         {"d7", {tag_d7,   "Контакт 8 - камера 1"}},
-        {"cpdo", {tag_cpdo,   "Давления в системе"}}
+        {"cpdo", {tag_cpdo,   "Давления в системе"}},
+        {"azmt", {tag_azmt,   "Азимут"}},
+        {"magx", {tag_magx,   "Магнитное поле по оси X"}},
+        {"magy", {tag_magy,   "Магнитное поле по оси Y"}},
+        {"magz", {tag_magz,   "Магнитное поле по оси Z"}},
+        {"_time", {tag_vtime,   "Временная отметка данных"}},
     };
 
 
@@ -77,6 +82,15 @@ void Dataset::setSource(const QString &source)
     m_source = source;
     m_source.replace("file:///","");
     qDebug()<<"filename:"<<m_source;
+}
+
+void Dataset::setRig(const QString &rigtype)
+{
+    if (rigtype == "mgbuk")
+        rig =Rigs::mgbu;
+    else
+        rig = Rigs::mgm7;
+
 }
 
 void Dataset::getData()
@@ -116,16 +130,20 @@ void Dataset::finish()
 
 void Dataset::process(QString &str)
 {
-    if (_line == 0) {
-        if (str.indexOf("Open")>=0)
-            rig = Rigs::mgm7;  //TODO Надо во всех логах сразу писать название девайса.
-        else
-            rig = Rigs::mgbu;
-    }
+    //    if (_line == 0) {
+    //        if (str.indexOf("Open")>=0)
+    //            rig = Rigs::mgm7;  //TODO Надо во всех логах сразу писать название девайса.
+    //        else
+    //            rig = Rigs::mgbu;
+    //    }
     _line++;
-    if (rig ==  Rigs::mgm7) {
-//        qDebug()<<"line:"<<_line;
-        process2(str);
+    if(rig ==  Rigs::mgbu) {
+        str.prepend("[").chop(1);
+        str.append("]");
+    }
+    if (true) { //rig ==  Rigs::mgm7
+        //        qDebug()<<"line:"<<_line;
+        process3(str);
         return;
     }
     static auto _posx=0; //запоминаем предыдущее положение механизма по Х
@@ -206,8 +224,7 @@ void Dataset::process(QString &str)
     m_data_sensors.removeDuplicates();
     //qDebug()<<m_data_control;
 }
-
-void Dataset::process2(QString &str) //TODO Обработка строки из JSON
+void Dataset::process2(QString &str)
 {
     static auto _posx=0; //запоминаем предыдущее положение механизма по Х
     static auto _posy=0; //запоминаем предыдущее положение механизма по Y
@@ -216,31 +233,31 @@ void Dataset::process2(QString &str) //TODO Обработка строки из
     if (n <= 0) return;
     auto t =str.indexOf("}]")+1;
     QString st = str.mid(n, t-n+1);
-    QString stime = str.mid(8,12);
-    int dd = str.mid(2,2).toInt();
-    int mm = str.mid(5,2).toInt();
-    int yy = QDate::currentDate().toString("yyyy").toInt();
-    //    qDebug()<<stime<<"1>>"<<st;
-    QDate d(yy, mm, dd);
+    QString stime = str.mid(9,12);
 
+    int dd = str.mid(3,2).toInt();
+    int mm = str.mid(6,2).toInt();
+    int yy = QDate::currentDate().toString("yyyy").toInt();
+    //    qDebug()<<stime<<">>"<<st << dd << mm << yy;
+    QDate d(yy, mm, dd);
     QDateTime dt(d.startOfDay( Qt::LocalTime));
-//    qDebug()<<"--"<<stime <<dt <<"=   "<< str;
+    //    qDebug()<<"--"<<stime <<dt;
     dt = dt.addMSecs(QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz")));
     //    qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
     //    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"))/1000.0;
     m_data[stime]["time"]=(dt.toMSecsSinceEpoch());
     st.replace("\\","");
-    //    qDebug()<<stime<<"2>>"<<st;
+    qDebug()<<stime<<"2>>"<<st;
     QJsonDocument doc = QJsonDocument::fromJson(st.toUtf8());
-    //    qDebug()<<"doc:"<<doc.isObject()<<doc.isNull()<<doc.isEmpty();
+    qDebug()<<"doc:"<<doc.isObject()<<doc.isNull()<<doc.isEmpty();
     if (doc.isArray()) {
         QJsonArray ja=doc.array();
-//        qDebug()<<"ja:"<<ja;
+        qDebug()<<"ja:"<<ja;
         for (int i = 0; i < ja.size(); i++) { // цикл по каждой плате
             if (_send && i==1) break; //  вторую плату для данных пропускаем
             QJsonObject jv= ja.at(i).toObject();
             for ( auto&& key: jv.keys()) {
-                //              qDebug()<< i << "m:" << key;
+                qDebug()<< i << "m:" << key<<" = "<<jv[key];
                 switch (m_tags[key].first) {
                 case tag_type:
                     m_data[stime][key] = decode(jv[key].toString());
@@ -264,9 +281,149 @@ void Dataset::process2(QString &str) //TODO Обработка строки из
                     //            Камера 2 (инжектор)
                     //            Камера 3 (инжектор)
                     //            Камера 4 (инжектор)
+                    uint dig = jv[key].toString().toUInt();
+                    m_data[stime]["dig1"] = dig;
+                    m_data[stime]["d0"] = bool(dig&1);
+                    m_data[stime]["d1"] = bool(dig&2);
+                    m_data[stime]["d2"] = bool(dig&4);
+                    m_data[stime]["d3"] = bool(dig&8);
+                    m_data[stime]["d4"] = bool(dig&16);
+                    m_data[stime]["d5"] = bool(dig&32);
+                    m_data[stime]["d6"] = bool(dig&64);
+                    m_data[stime]["d7"] = bool(dig&128);
+                    break;
+                }
+                case tag_svet: {
+
+                    quint16 s=jv[key].toString().toUInt();
+                    m_data[stime]["svet1"] = s & 0xF;
+                    m_data[stime]["svet2"] = (s >>= 4) & 0xF;
+                    m_data[stime]["svet3"] = (s >>= 4) & 0xF;
+                    m_data[stime]["svet4"] = (s >>= 4) & 0xF;
+                    break;}
+                case tag__dev:{
+
+                    break;
+                }
+                    //              case tag_ana1:
+                    //              case tag_ana2:
+                    //              case tag_ana3: {
+                    //                  if (m_data[stime]["_dev"] == 0)
+                    //                     {
+                    ////                      qDebug()<<"_dev:"<<m_data[stime]["_dev"] ;
+                    //                      break;
+                    //                  }
+
+                    //              }
+                default:{
+                    m_data[stime][key] = jv[key].toInt();
+                    //                  if (stime == "15:24:10:181")
+                    //                      qDebug()<<stime<<"::::"<<key<<m_data[stime][key]<<jv[key].toInt();
+
+                    //                  if (key=="ana1")
+                    //                      if (m_data[stime][key]>0)
+                    //                          qDebug()<<stime<<":"<<key<<m_data[stime][key];
+                    //    qWarning()<<"Неизвестный тэг: "<<pair[0]<<" !";
+                }
+                    //                  qDebug()<<"15:24:10:181 ===="<<m_data["15:24:10:181"]<<"stime:"<<stime;
+                }
+
+
+
+            }
+            //добавляем тэг типа данных
+            if( m_data[stime].contains("dig1") ) { // Данные управления
+                m_data[stime]["_dat"] = 1;
+                m_data_control.append(m_data[stime].keys()); //litovko думаю что здесь сильно тормозит каждый раз
+            }
+            else
+                if( m_data[stime].contains("type") ) {
+                    m_data[stime]["_dat"] = 2;
+                    m_data_sensors.append(m_data[stime].keys());
+                }
+                else
+                    m_data[stime]["_dat"] = 0;
+            //                            qDebug()<<">>"<<m_data[stime];
+            m_data_control.removeDuplicates(); //litovko думаю что здесь сильно тормозит каждый раз
+            m_data_sensors.removeDuplicates();
+        }
+
+    }
+
+}
+
+void Dataset::process3(QString &str)
+{
+    QString stime, st;
+    static auto _posx=0; //запоминаем предыдущее положение механизма по Х
+    static auto _posy=0; //запоминаем предыдущее положение механизма по Y
+    bool _send = str.indexOf("sent:");
+    auto n = str.indexOf("[{", 0);
+    if (n < 0) return;
+    auto t =str.indexOf("}]")+1;
+    st = str.mid(n, t-n+1);
+    int dd, mm, yy;
+
+    if (rig == Rigs::mgm7) {
+        stime = str.mid(8,12);
+        dd = str.midRef(2,2).toInt();
+        mm = str.midRef(5,2).toInt();
+        yy = QDate::currentDate().toString("yyyy").toInt();
+    }
+    else
+    {
+        stime = str.mid(31,12);
+        dd = str.midRef(20,2).toInt();
+        mm = str.midRef(23,2).toInt();
+        yy = QDate::currentDate().toString("yyyy").toInt();
+        st = str;
+    }
+    //    qDebug()<<stime<<"1>>"<<st;
+    QDate d(yy, mm, dd);
+    QDateTime dt(d.startOfDay( Qt::LocalTime));
+    //    qDebug()<<"--"<<stime <<dt;
+    dt = dt.addMSecs(QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss.zzz")));
+//        qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
+    //    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"))/1000.0;
+    qint64 ddd=dt.toMSecsSinceEpoch();
+    qDebug()<<ddd;
+    m_data[stime]["time"]=(dt.toMSecsSinceEpoch());
+    QJsonDocument doc = QJsonDocument::fromJson(st.toUtf8());
+    //    qDebug()<<"doc:"<<doc.isObject()<<doc.isNull()<<doc.isEmpty();
+    if (doc.isArray()) {
+        QJsonArray ja=doc.array();
+        //        qDebug()<<"ja:"<<ja;
+        for (int i = 0; i < ja.size(); i++) { // цикл по каждой плате
+            if (_send && i==1) break; //  вторую плату для данных пропускаем
+            QJsonObject jv= ja.at(i).toObject();
+            for ( auto&& key: jv.keys()) {
+                //              qDebug()<< i << "m:" << key;
+                switch (m_tags[key].first) {
+                case tag_vtime:
+                    m_data[stime]["time"]=QDateTime::fromString(jv[key].toString(),"dd.MM.yyyy hh:mm:ss.zzz").toMSecsSinceEpoch(); //29.10.2022 15:55:53.314
+                    qDebug()<<stime<<jv[key].toString()<<QDateTime::fromString(jv[key].toString(),"dd.MM.yyyy hh:mm:ss.zzz")<<m_data[stime]["time"];
+                    break;
+                case tag_gmod:
+                    m_data[stime][key] = decode(jv[key].toString());
+                    break;
+                case tag_spxy:
+                    _posx=spxy_to_X(jv[key].toString().toInt(), _posx);
+                    m_data[stime]["sp_X"] = 10*_posx;
+                    _posy=spxy_to_Y(jv[key].toString().toInt(), _posy);
+                    m_data[stime]["sp_Y"] = -_posy;
+                    break;
+                case tag_dig1:{
+                    //            Гидравлический насос
+                    //            Насос промывки
+                    //            Резерв
+                    //            Гидравлический насос №2
+                    //            Камера 1 (инжектор)
+                    //            Камера 2 (инжектор)
+                    //            Камера 3 (инжектор)
+                    //            Камера 4 (инжектор)
 
                     uint dig = jv[key].toInt();
-//                    qDebug()<<"DIG:"<<jv[key]<<" == "<<dig<<(10*(dig&1)) ;
+                    //                    qDebug()<<"DIG:"<<jv[key]<<" == "<<dig<<(10*(dig&1)) ;
                     m_data[stime]["d0"] = bool(dig&1);
                     m_data[stime]["d1"] = bool(dig&2);
                     m_data[stime]["d2"] = bool(dig&4);
@@ -300,30 +457,19 @@ void Dataset::process2(QString &str) //TODO Обработка строки из
                     //                  }
 
                     //              }
-                    //TODO Сделать ТЭГ tag_cpdo
-                    //TODO Сделать пересчет давления.
                 case tag_cpdo: {
                     QString s = jv[key].toString().replace(" ","");
 
                     QString sub = s.mid(0,4);
                     bool ok;
                     int pressure = sub.toInt(&ok, 16);
-//                    qDebug()<< pressure<<sub << s ;
+                    //                    qDebug()<< pressure<<sub << s ;
                     qreal _a = 0.00782881;
                     m_data[stime]["poil"] = pressure*_a*10000;
                     break;
                 }
-                default:{
+                default:
                     m_data[stime][key] = jv[key].toInt();
-                    //                  if (stime == "15:24:10:181")
-//                    qDebug()<<"DEFAULS"<<stime<<"::::"<<key<<m_data[stime][key]<<jv[key].toInt();
-
-                    //                  if (key=="ana1")
-                    //                      if (m_data[stime][key]>0)
-                    //                          qDebug()<<stime<<":"<<key<<m_data[stime][key];
-                    //    qWarning()<<"Неизвестный тэг: "<<pair[0]<<" !";
-                }
-                    //                  qDebug()<<"15:24:10:181 ===="<<m_data["15:24:10:181"]<<"stime:"<<stime;
                 }
 
 
@@ -341,7 +487,7 @@ void Dataset::process2(QString &str) //TODO Обработка строки из
                 }
                 else
                     m_data[stime]["_dat"] = 0;
-//                            qDebug()<<">>"<<m_data[stime];
+            //                            qDebug()<<">>"<<m_data[stime];
             m_data_control.removeDuplicates(); //litovko думаю что здесь сильно тормозит каждый раз
             m_data_sensors.removeDuplicates();
         }
@@ -349,6 +495,7 @@ void Dataset::process2(QString &str) //TODO Обработка строки из
     }
 
 }
+
 
 int Dataset::decode(const QString &mode)
 {
