@@ -224,9 +224,8 @@ void CustomPlotItem::showCursor(QMouseEvent *event)
         setCoord_x(QTime::fromMSecsSinceStartOfDay(x*1000).toString("hh:mm:ss:zzz"));
 
         for (auto gr:m_CustomPlot->selectedGraphs()) {
-            qDebug()<<"curs"<<gr->name()<<"index:"<<index<<"maxindex:"<<gr->dataCount()<<mouseX;
+//            qDebug()<<"curs"<<gr->name()<<"index:"<<index<<"maxindex:"<<gr->dataCount()<<mouseX;
             setCoord_y(gr->dataMainValue(index));
-            qDebug()<<"::";
             setGraph_name(gr->name());
             break;
         }

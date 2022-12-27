@@ -137,13 +137,26 @@ void Dataset::process(QString &str)
     //            rig = Rigs::mgbu;
     //    }
     _line++;
-    if(rig ==  Rigs::mgbu) {
-        str.prepend("[").chop(1);
-        str.append("]");
+    if (_line == 1) {
+        if (str=="Open\n" ) {
+            rig = Rigs::tg;
+            qDebug()<<"TELEGRAPHER";
+        }
+        else {
+            rig = Rigs::mgbu;
+            qDebug()<<"MGBU-K";
+        }
     }
-    if (true) { //rig ==  Rigs::mgm7
+
+    if (rig ==  Rigs::mgbu) { //rig ==  Rigs::mgm7
         //        qDebug()<<"line:"<<_line;
+
         process3(str);
+        return;
+    }
+    else {
+        qDebug()<<"process2:"<<str;
+        process2(str);
         return;
     }
     static auto _posx=0; //запоминаем предыдущее положение механизма по Х
@@ -153,6 +166,7 @@ void Dataset::process(QString &str)
     auto t =str.indexOf(":")+1;
 
     QString stime=str.mid(t, 12);
+
     n = str.indexOf("{",n);
     t = str.indexOf("}",n);
     QString st = str.mid(n+1, t-n-1);
@@ -160,7 +174,7 @@ void Dataset::process(QString &str)
     QStringList list=st.split(";");
     for( const auto& el: list ) {
         QStringList pair = el.split(":");
-        m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"));
+        m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss.zzz"));
         switch (m_tags[pair[0]].first) {
         case tag_gmod:
             m_data[stime][pair[0]] = decode(pair[1]);
@@ -233,18 +247,18 @@ void Dataset::process2(QString &str)
     if (n <= 0) return;
     auto t =str.indexOf("}]")+1;
     QString st = str.mid(n, t-n+1);
-    QString stime = str.mid(9,12);
-
-    int dd = str.mid(3,2).toInt();
-    int mm = str.mid(6,2).toInt();
+    QString stime = str.mid(8,12);
+    stime[8] = '.';
+    int dd = str.mid(2,2).toInt();
+    int mm = str.mid(5,2).toInt();
     int yy = QDate::currentDate().toString("yyyy").toInt();
     //    qDebug()<<stime<<">>"<<st << dd << mm << yy;
     QDate d(yy, mm, dd);
     QDateTime dt(d.startOfDay( Qt::LocalTime));
     //    qDebug()<<"--"<<stime <<dt;
-    dt = dt.addMSecs(QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz")));
-    //    qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
-    //    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"))/1000.0;
+    dt = dt.addMSecs(QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss.zzz")));
+    qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
+    //    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss.zzz"))/1000.0;
     m_data[stime]["time"]=(dt.toMSecsSinceEpoch());
     st.replace("\\","");
     qDebug()<<stime<<"2>>"<<st;
@@ -357,36 +371,32 @@ void Dataset::process3(QString &str)
     QString stime, st;
     static auto _posx=0; //запоминаем предыдущее положение механизма по Х
     static auto _posy=0; //запоминаем предыдущее положение механизма по Y
-    bool _send = str.indexOf("sent:");
-    auto n = str.indexOf("[{", 0);
-    if (n < 0) return;
-    auto t =str.indexOf("}]")+1;
-    st = str.mid(n, t-n+1);
+    //    bool _send = str.indexOf("sent:");
+    //    auto n = str.indexOf("[{", 0);
+    //    if (n < 0) return;
+    //    auto t =str.indexOf("}]")+1;
+    //    st = str.mid(n, t-n+1);
     int dd, mm, yy;
 
-    if (rig == Rigs::mgm7) {
-        stime = str.mid(8,12);
-        dd = str.midRef(2,2).toInt();
-        mm = str.midRef(5,2).toInt();
-        yy = QDate::currentDate().toString("yyyy").toInt();
-    }
-    else
-    {
-        stime = str.mid(31,12);
-        dd = str.midRef(20,2).toInt();
-        mm = str.midRef(23,2).toInt();
-        yy = QDate::currentDate().toString("yyyy").toInt();
-        st = str;
-    }
+    str.prepend("[").chop(1);
+    str.append("]");
+
+    stime = str.mid(31,12);
+    dd = str.midRef(20,2).toInt();
+    mm = str.midRef(23,2).toInt();
+    yy = QDate::currentDate().toString("yyyy").toInt();
+    st = str;
     //    qDebug()<<stime<<"1>>"<<st;
     QDate d(yy, mm, dd);
     QDateTime dt(d.startOfDay( Qt::LocalTime));
+    if (!dt.isValid())
+        return;
     //    qDebug()<<"--"<<stime <<dt;
     dt = dt.addMSecs(QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss.zzz")));
-//        qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
+    //    qDebug()<<stime <<dt<< dt.toMSecsSinceEpoch()<<double(dt.toMSecsSinceEpoch())/1000.0;
     //    m_data[stime]["time"]=QTime(0,0,0).msecsTo(QTime::fromString(stime,"hh:mm:ss:zzz"))/1000.0;
     qint64 ddd=dt.toMSecsSinceEpoch();
-    qDebug()<<ddd;
+    //    qDebug()<<ddd;
     m_data[stime]["time"]=(dt.toMSecsSinceEpoch());
     QJsonDocument doc = QJsonDocument::fromJson(st.toUtf8());
     //    qDebug()<<"doc:"<<doc.isObject()<<doc.isNull()<<doc.isEmpty();
@@ -394,14 +404,14 @@ void Dataset::process3(QString &str)
         QJsonArray ja=doc.array();
         //        qDebug()<<"ja:"<<ja;
         for (int i = 0; i < ja.size(); i++) { // цикл по каждой плате
-            if (_send && i==1) break; //  вторую плату для данных пропускаем
+            //            if (_send && i==1) break; //  вторую плату для данных пропускаем
             QJsonObject jv= ja.at(i).toObject();
             for ( auto&& key: jv.keys()) {
                 //              qDebug()<< i << "m:" << key;
                 switch (m_tags[key].first) {
                 case tag_vtime:
                     m_data[stime]["time"]=QDateTime::fromString(jv[key].toString(),"dd.MM.yyyy hh:mm:ss.zzz").toMSecsSinceEpoch(); //29.10.2022 15:55:53.314
-                    qDebug()<<stime<<jv[key].toString()<<QDateTime::fromString(jv[key].toString(),"dd.MM.yyyy hh:mm:ss.zzz")<<m_data[stime]["time"];
+                    //                    qDebug()<<stime<<jv[key].toString()<<QDateTime::fromString(jv[key].toString(),"dd.MM.yyyy hh:mm:ss.zzz")<<m_data[stime]["time"];
                     break;
                 case tag_gmod:
                     m_data[stime][key] = decode(jv[key].toString());
@@ -463,12 +473,16 @@ void Dataset::process3(QString &str)
                     QString sub = s.mid(0,4);
                     bool ok;
                     int pressure = sub.toInt(&ok, 16);
-                    //                    qDebug()<< pressure<<sub << s ;
+                    //                                        qDebug()<< pressure<<sub << s ;
                     qreal _a = 0.00782881;
                     m_data[stime]["poil"] = pressure*_a*10000;
+                    sub = s.mid(4,4);
+                    pressure = sub.toInt(&ok, 16);
+                    m_data[stime]["poi2"] = pressure;
                     break;
                 }
                 default:
+                    //                    qDebug()<<key<<":"<<jv[key].toInt();
                     m_data[stime][key] = jv[key].toInt();
                 }
 
@@ -476,6 +490,7 @@ void Dataset::process3(QString &str)
 
             }
             //добавляем тэг типа данных
+            //TODO здесь неправильно, если m_data в один момент имеет и сенсоры и управление, то разделение на сенсоры и управление перестает работать!
             if( m_data[stime].contains("dig1") ) { // Данные управления
                 m_data[stime]["_dat"] = 1;
                 m_data_control.append(m_data[stime].keys()); //litovko думаю что здесь сильно тормозит каждый раз
@@ -487,9 +502,11 @@ void Dataset::process3(QString &str)
                 }
                 else
                     m_data[stime]["_dat"] = 0;
-            //                            qDebug()<<">>"<<m_data[stime];
+//            qDebug()<<">>"<<m_data[stime];
             m_data_control.removeDuplicates(); //litovko думаю что здесь сильно тормозит каждый раз
             m_data_sensors.removeDuplicates();
+//            qDebug()<<stime<<" dataset control:"<< m_data_control.count();
+//            qDebug()<<"dataset sensors:"<< m_data_sensors.count();
         }
 
     }

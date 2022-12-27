@@ -55,7 +55,8 @@ enum TagsValue {tag_ana1,
                };
 enum Rigs {
     mgbu,
-    mgm7
+    mgm7,
+    tg
 };
 
 

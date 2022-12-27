@@ -35,7 +35,7 @@ extern void toggle_log(bool recordlog) {
         return;
     }
     if (!logfile.isOpen()) {
-        logfile.setFileName("log/tk15_log_"+QDateTime::currentDateTime().toString("dd-MM-yyyy_hh-mm-ss-zzz.log"));
+        logfile.setFileName("log/plotter_log_"+QDateTime::currentDateTime().toString("dd-MM-yyyy_hh-mm-ss-zzz.log"));
         logfile.open(QIODevice::WriteOnly | QIODevice::Text);
         logfile.write("Open\n");
     }

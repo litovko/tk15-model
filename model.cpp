@@ -357,7 +357,7 @@ void Model::plotdata()
         //if (el.second["_dat"] != 2) continue;
         x = el.second["time"];
         x = QTime::fromString(el.first,"hh:mm:ss.zzz").msecsSinceStartOfDay(); // вот тут уже неправильно - либо точка либо двоеточие - зависит от аппарата!!! litovko
-        qDebug()<<x<<el.first<<QString("%1").arg((( double)(x)/1000.0)) << QString::number((( double)(x)/1000.0), 'g', 8);
+//        qDebug()<<x<<el.first<<QString("%1").arg((( double)(x)/1000.0)) << QString::number((( double)(x)/1000.0), 'g', 8);
         xmin = std::min(x,xmin);
         xmax = std::max(x,xmax);
 //        qDebug()<<"t="<<el.first<<"xmin:"<<xmin<<"x:"<<x;
